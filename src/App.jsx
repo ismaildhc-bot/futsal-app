@@ -149,16 +149,20 @@ function SessionPage() {
     loadAll()
   }
 
-  async function generateMatches() {
+async function generateMatches() {
     if (matches.length > 0) {
       if (!confirm('Matches already exist. Delete and regenerate?')) return
       await supabase.from('matches').delete().eq('session_id', id)
     }
+    const rounds = parseInt(prompt('How many rounds? (each round = every team plays every other team once)', '3') || '3')
+    if (rounds < 1 || rounds > 20) { alert('Must be between 1 and 20'); return }
     const list = []
     let order = 1
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++ })
+    for (let r = 0; r < rounds; r++) {
+      for (let i = 0; i < teams.length; i++) {
+        for (let j = i + 1; j < teams.length; j++) {
+          list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++ })
+        }
       }
     }
     await supabase.from('matches').insert(list)
