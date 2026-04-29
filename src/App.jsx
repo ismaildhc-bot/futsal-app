@@ -575,23 +575,32 @@ function LeaderboardPage() {
 // =================== LOGIN ===================
 function LoginPage() {
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
-  async function send() {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } })
-    if (error) { alert(error.message); return }
-    setSent(true)
+  async function login() {
+    setError(''); setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) { setError(error.message); return }
+    navigate('/')
   }
+
+  async function logout() {
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
+
   return (
     <div className="max-w-sm mx-auto bg-white border rounded-lg p-6">
-      <h1 className="text-xl font-bold mb-2">Admin Login</h1>
-      <p className="text-sm text-gray-500 mb-4">Enter your admin email. You'll get a magic link to sign in.</p>
-      {!sent ? (
-        <>
-          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="email@example.com" className="w-full border rounded px-3 py-2 mb-3" />
-          <button onClick={send} className="w-full bg-fulda text-white py-2 rounded font-semibold">Send magic link</button>
-        </>
-      ) : <p className="text-fulda">✅ Check your email and click the link.</p>}
+      <h1 className="text-xl font-bold mb-4">Admin Login</h1>
+      <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="Email" className="w-full border rounded px-3 py-2 mb-3" />
+      <input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Password" className="w-full border rounded px-3 py-2 mb-3" onKeyDown={e => e.key === 'Enter' && login()} />
+      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      <button onClick={login} disabled={loading} className="w-full bg-fulda text-white py-2 rounded font-semibold mb-2">{loading ? 'Logging in…' : 'Log in'}</button>
+      <button onClick={logout} className="w-full text-gray-500 text-sm">Log out</button>
     </div>
   )
 }
