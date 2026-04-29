@@ -158,14 +158,41 @@ async function generateMatches() {
     if (rounds < 1 || rounds > 20) { alert('Must be between 1 and 20'); return }
     const list = []
     let order = 1
-    for (let r = 0; r < rounds; r++) {
+    for (let r = 1; r <= rounds; r++) {
       for (let i = 0; i < teams.length; i++) {
         for (let j = i + 1; j < teams.length; j++) {
-          list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++ })
+          list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++, round: r })
         }
       }
     }
     await supabase.from('matches').insert(list)
+    loadAll()
+  }
+
+  async function addRound() {
+    const maxRound = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.round || 1))
+    const newRound = maxRound + 1
+    const maxOrder = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.match_order))
+    let order = maxOrder + 1
+    const list = []
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++, round: newRound })
+      }
+    }
+    await supabase.from('matches').insert(list)
+    loadAll()
+  }
+
+  async function deleteRound(roundNum) {
+    if (!confirm(`Delete all matches in Round ${roundNum}?`)) return
+    await supabase.from('matches').delete().eq('session_id', id).eq('round', roundNum)
+    loadAll()
+  }
+
+  async function deleteMatch(matchId) {
+    if (!confirm('Delete this match?')) return
+    await supabase.from('matches').delete().eq('id', matchId)
     loadAll()
   }
 
@@ -307,54 +334,78 @@ async function generateMatches() {
         )}
       </section>
 
-      {/* Matches */}
+{/* Matches */}
       <section className="bg-white border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold">Matches</h2>
-          {isAdmin && <button onClick={generateMatches} className="bg-fulda text-white px-3 py-1 rounded text-sm">Generate matches</button>}
+          {isAdmin && matches.length === 0 && <button onClick={generateMatches} className="bg-fulda text-white px-3 py-1 rounded text-sm">Generate matches</button>}
         </div>
         {matches.length === 0 && <p className="text-sm text-gray-500">No matches yet. Click "Generate matches" once teams are set.</p>}
-        <div className="space-y-3">
-          {matches.map(m => {
-            const a = teams.find(t => t.id === m.team_a_id)
-            const b = teams.find(t => t.id === m.team_b_id)
-            const aPlayers = teamPlayers.filter(tp => tp.team_id === m.team_a_id)
-            const bPlayers = teamPlayers.filter(tp => tp.team_id === m.team_b_id)
+
+        {(() => {
+          const rounds = [...new Set(matches.map(m => m.round || 1))].sort((a,b) => a-b)
+          return rounds.map(roundNum => {
+            const roundMatches = matches.filter(m => (m.round || 1) === roundNum)
             return (
-              <div key={m.id} className="border rounded p-3">
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold">Match {m.match_order}: Team {a?.label} vs Team {b?.label}</div>
-                  <div className="text-xl font-bold">{m.score_a} - {m.score_b}</div>
+              <div key={roundNum} className="mb-4">
+                <div className="flex justify-between items-center bg-fulda text-white px-3 py-2 rounded-t">
+                  <h3 className="font-bold">🏆 Round {roundNum}</h3>
+                  {isAdmin && <button onClick={() => deleteRound(roundNum)} className="text-xs bg-white text-fulda px-2 py-1 rounded">🗑 Delete round</button>}
                 </div>
-                {isAdmin && (
-                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                    <div>
-                      <div className="font-semibold mb-1">Team {a?.label} goal:</div>
-                      <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
-                        <option value="">+ goal scorer…</option>
-                        {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                      </select>
-                      <button onClick={() => removeLastGoal(m.id, m.team_a_id)} className="text-red-500 mt-1">undo last</button>
-                    </div>
-                    <div>
-                      <div className="font-semibold mb-1">Team {b?.label} goal:</div>
-                      <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
-                        <option value="">+ goal scorer…</option>
-                        {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                      </select>
-                      <button onClick={() => removeLastGoal(m.id, m.team_b_id)} className="text-red-500 mt-1">undo last</button>
-                    </div>
-                  </div>
-                )}
-                {goals.filter(g => g.match_id === m.id).length > 0 && (
-                  <div className="mt-2 text-xs text-gray-600">
-                    Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name).join(', ')}
-                  </div>
-                )}
+                <div className="border border-t-0 rounded-b p-3 space-y-3">
+                  {roundMatches.map(m => {
+                    const a = teams.find(t => t.id === m.team_a_id)
+                    const b = teams.find(t => t.id === m.team_b_id)
+                    const aPlayers = teamPlayers.filter(tp => tp.team_id === m.team_a_id)
+                    const bPlayers = teamPlayers.filter(tp => tp.team_id === m.team_b_id)
+                    return (
+                      <div key={m.id} className="border rounded p-3">
+                        <div className="flex justify-between items-center">
+                          <div className="font-semibold">Match {m.match_order}: Team {a?.label} vs Team {b?.label}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-xl font-bold">{m.score_a} - {m.score_b}</div>
+                            {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
+                          </div>
+                        </div>
+                        {isAdmin && (
+                          <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                            <div>
+                              <div className="font-semibold mb-1">Team {a?.label} goal:</div>
+                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
+                                <option value="">+ goal scorer…</option>
+                                {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+                              </select>
+                              <button onClick={() => removeLastGoal(m.id, m.team_a_id)} className="text-red-500 mt-1">undo last</button>
+                            </div>
+                            <div>
+                              <div className="font-semibold mb-1">Team {b?.label} goal:</div>
+                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
+                                <option value="">+ goal scorer…</option>
+                                {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+                              </select>
+                              <button onClick={() => removeLastGoal(m.id, m.team_b_id)} className="text-red-500 mt-1">undo last</button>
+                            </div>
+                          </div>
+                        )}
+                        {goals.filter(g => g.match_id === m.id).length > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )
-          })}
-        </div>
+          })
+        })()}
+
+        {isAdmin && matches.length > 0 && (
+          <button onClick={addRound} className="w-full mt-3 border-2 border-dashed border-fulda text-fulda font-semibold py-2 rounded hover:bg-fulda hover:text-white">
+            + Add another round
+          </button>
+        )}
       </section>
 
       {/* Top scorers */}
