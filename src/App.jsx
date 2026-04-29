@@ -71,13 +71,13 @@ function HomePage() {
 
   async function createSession() {
     const today = new Date().toISOString().split('T')[0]
-    const numTeams = parseInt(prompt('How many teams? (3 or 4)', '3') || '3')
-    if (![3, 4].includes(numTeams)) { alert('Must be 3 or 4'); return }
+const numTeams = parseInt(prompt('How many teams? (2 to 10)', '3') || '3')
+    if (numTeams < 2 || numTeams > 10) { alert('Must be between 2 and 10'); return }
     const { data, error } = await supabase.from('sessions')
       .insert({ date: today, num_teams: numTeams, name: `Session ${today}` })
       .select().single()
     if (error) { alert(error.message); return }
-    const labels = ['A', 'B', 'C', 'D'].slice(0, numTeams)
+const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].slice(0, numTeams)
     await supabase.from('teams').insert(labels.map(l => ({ session_id: data.id, label: l })))
     navigate(`/session/${data.id}`)
   }
