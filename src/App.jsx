@@ -119,7 +119,7 @@ function SessionPage() {
   const [matches, setMatches] = useState([])
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
-  const [assistPickerFor, setAssistPickerFor] = useState(null) // goal id awaiting assist pick
+  const [assistPickerFor, setAssistPickerFor] = useState(null)
 
   useEffect(() => { loadAll() }, [id])
 
@@ -142,11 +142,35 @@ function SessionPage() {
     setLoading(false)
   }
 
+  // OPTIMISTIC team assignment: update screen instantly, save to DB in background
   async function assignPlayer(playerId, teamId) {
     const sessionTeamIds = teams.map(t => t.id)
-    await supabase.from('team_players').delete().eq('player_id', playerId).in('team_id', sessionTeamIds)
-    if (teamId) await supabase.from('team_players').insert({ player_id: playerId, team_id: teamId })
-    loadAll()
+    const player = allPlayers.find(p => p.id === playerId)
+    const targetTeam = teams.find(t => t.id === teamId)
+
+    // 1. Update screen IMMEDIATELY (optimistic)
+    setTeamPlayers(prev => {
+      const filtered = prev.filter(tp => !(tp.player_id === playerId && sessionTeamIds.includes(tp.team_id)))
+      if (teamId && player && targetTeam) {
+        filtered.push({
+          id: `temp-${Date.now()}`,
+          player_id: playerId,
+          team_id: teamId,
+          players: player,
+          teams: { session_id: id },
+        })
+      }
+      return filtered
+    })
+
+    // 2. Save to DB in background (no reload)
+    try {
+      await supabase.from('team_players').delete().eq('player_id', playerId).in('team_id', sessionTeamIds)
+      if (teamId) await supabase.from('team_players').insert({ player_id: playerId, team_id: teamId })
+    } catch (e) {
+      // If save fails, reload to recover real state
+      loadAll()
+    }
   }
 
   async function generateMatches() {
@@ -297,6 +321,29 @@ function SessionPage() {
   })
   const topScorers = Object.entries(scorerMap).sort((a, b) => b[1] - a[1])
 
+  // Reusable goal row component (used inside two-column layout below)
+  const GoalRow = ({ g, samePool }) => {
+    const isPicking = assistPickerFor === g.id
+    return (
+      <div className="flex items-center justify-between text-sm bg-gray-50 px-2 py-1 rounded">
+        <div className="flex-1 flex items-center gap-2 flex-wrap">
+          <span>⚽ {g.players?.name || 'Team Goal'}</span>
+          {g.assist_player?.name && <span>🎯 {g.assist_player.name}</span>}
+          {isAdmin && g.player_id && !g.assist_player_id && !isPicking && (
+            <button onClick={() => setAssistPickerFor(g.id)} className="text-xs text-fulda underline">+ assist</button>
+          )}
+          {isAdmin && isPicking && (
+            <select autoFocus onChange={e => setAssist(g.id, e.target.value)} onBlur={() => setAssistPickerFor(null)} className="text-xs border rounded px-1 py-0.5">
+              <option value="">— pick assist —</option>
+              {samePool.filter(p => p.player_id !== g.player_id).map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+            </select>
+          )}
+        </div>
+        {isAdmin && <button onClick={() => deleteGoal(g.id)} className="text-red-500 text-xs ml-2">❌</button>}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -352,7 +399,7 @@ function SessionPage() {
                 const assigned = teamPlayers.find(tp => tp.player_id === p.id)
                 return (
                   <div key={p.id} className="flex items-center justify-between text-sm border-b py-1">
-                    <span>{p.name} {assigned && <span className="text-fulda font-bold">→ {assigned.teams?.session_id ? teams.find(t=>t.id===assigned.team_id)?.label : ''}</span>}</span>
+                    <span>{p.name} {assigned && <span className="text-fulda font-bold">→ {teams.find(t=>t.id===assigned.team_id)?.label || ''}</span>}</span>
                     <div className="flex gap-1">
                       {teams.map(t => (
                         <button key={t.id} onClick={() => assignPlayer(p.id, t.id)} className="bg-gray-200 hover:bg-fulda hover:text-white px-2 py-1 rounded text-xs">{t.label}</button>
@@ -390,7 +437,8 @@ function SessionPage() {
                     const b = teams.find(t => t.id === m.team_b_id)
                     const aPlayers = teamPlayers.filter(tp => tp.team_id === m.team_a_id)
                     const bPlayers = teamPlayers.filter(tp => tp.team_id === m.team_b_id)
-                    const matchGoals = goals.filter(g => g.match_id === m.id)
+                    const aGoals = goals.filter(g => g.match_id === m.id && g.team_id === m.team_a_id)
+                    const bGoals = goals.filter(g => g.match_id === m.id && g.team_id === m.team_b_id)
                     return (
                       <div key={m.id} className="border rounded p-3">
                         <div className="flex justify-between items-center">
@@ -400,57 +448,51 @@ function SessionPage() {
                             {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
                           </div>
                         </div>
-                        {isAdmin && (
-                          <div className="grid grid-cols-2 gap-2 mt-3">
-                            <div>
-                              <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
-                                +1 Team {a?.label}
-                              </button>
-                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 mt-1 text-xs text-gray-600">
-                                <option value="">or pick scorer…</option>
-                                {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
-                                +1 Team {b?.label}
-                              </button>
-                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 mt-1 text-xs text-gray-600">
-                                <option value="">or pick scorer…</option>
-                                {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                              </select>
-                            </div>
+
+                        {/* TWO-COLUMN: buttons + goals per team */}
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                          {/* TEAM A column */}
+                          <div className="space-y-2">
+                            {isAdmin && (
+                              <>
+                                <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
+                                  +1 Team {a?.label}
+                                </button>
+                                <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 text-xs text-gray-600">
+                                  <option value="">or pick scorer…</option>
+                                  {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+                                </select>
+                              </>
+                            )}
+                            {aGoals.length > 0 && (
+                              <div className="space-y-1 pt-1">
+                                <div className="text-xs font-semibold text-gray-500">Team {a?.label} goals:</div>
+                                {aGoals.map(g => <GoalRow key={g.id} g={g} samePool={aPlayers} />)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {matchGoals.length > 0 && (
-                          <div className="mt-3 border-t pt-2 space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 mb-1">Goals scored:</div>
-                            {matchGoals.map(g => {
-                              const teamLabel = g.team_id === m.team_a_id ? a?.label : b?.label
-                              const samePool = g.team_id === m.team_a_id ? aPlayers : bPlayers
-                              const isPicking = assistPickerFor === g.id
-                              return (
-                                <div key={g.id} className="flex items-center justify-between text-sm bg-gray-50 px-2 py-1 rounded">
-                                  <div className="flex-1 flex items-center gap-2 flex-wrap">
-                                    <span className="text-xs text-gray-500">Team {teamLabel}</span>
-                                    <span>⚽ {g.players?.name || 'Team Goal'}</span>
-                                    {g.assist_player?.name && <span>🎯 {g.assist_player.name}</span>}
-                                    {isAdmin && g.player_id && !g.assist_player_id && !isPicking && (
-                                      <button onClick={() => setAssistPickerFor(g.id)} className="text-xs text-fulda underline">+ assist</button>
-                                    )}
-                                    {isAdmin && isPicking && (
-                                      <select autoFocus onChange={e => setAssist(g.id, e.target.value)} onBlur={() => setAssistPickerFor(null)} className="text-xs border rounded px-1 py-0.5">
-                                        <option value="">— pick assist —</option>
-                                        {samePool.filter(p => p.player_id !== g.player_id).map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                                      </select>
-                                    )}
-                                  </div>
-                                  {isAdmin && <button onClick={() => deleteGoal(g.id)} className="text-red-500 text-xs ml-2">❌</button>}
-                                </div>
-                              )
-                            })}
+
+                          {/* TEAM B column */}
+                          <div className="space-y-2">
+                            {isAdmin && (
+                              <>
+                                <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
+                                  +1 Team {b?.label}
+                                </button>
+                                <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 text-xs text-gray-600">
+                                  <option value="">or pick scorer…</option>
+                                  {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+                                </select>
+                              </>
+                            )}
+                            {bGoals.length > 0 && (
+                              <div className="space-y-1 pt-1">
+                                <div className="text-xs font-semibold text-gray-500">Team {b?.label} goals:</div>
+                                {bGoals.map(g => <GoalRow key={g.id} g={g} samePool={bPlayers} />)}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     )
                   })}
