@@ -63,21 +63,21 @@ function HomePage() {
 
   useEffect(() => { loadSessions() }, [])
 
-async function loadSessions() {
+  async function loadSessions() {
     const { data } = await supabase.from('sessions').select('*').order('date', { ascending: false })
     setSessions(data || [])
     setLoading(false)
   }
 
-  createSession() {
+  async function createSession() {
     const today = new Date().toISOString().split('T')[0]
-const numTeams = parseInt(prompt('How many teams? (2 to 10)', '3') || '3')
+    const numTeams = parseInt(prompt('How many teams? (2 to 10)', '3') || '3')
     if (numTeams < 2 || numTeams > 10) { alert('Must be between 2 and 10'); return }
     const { data, error } = await supabase.from('sessions')
       .insert({ date: today, num_teams: numTeams, name: `Session ${today}` })
       .select().single()
     if (error) { alert(error.message); return }
-const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].slice(0, numTeams)
+    const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].slice(0, numTeams)
     await supabase.from('teams').insert(labels.map(l => ({ session_id: data.id, label: l })))
     navigate(`/session/${data.id}`)
   }
@@ -122,7 +122,7 @@ function SessionPage() {
 
   useEffect(() => { loadAll() }, [id])
 
-async function loadAll() {
+  async function loadAll() {
     setLoading(true)
     const [sRes, tRes, pRes, tpRes, mRes, gRes] = await Promise.all([
       supabase.from('sessions').select('*').eq('id', id).single(),
@@ -142,14 +142,13 @@ async function loadAll() {
   }
 
   async function assignPlayer(playerId, teamId) {
-    // remove from any team in this session
     const sessionTeamIds = teams.map(t => t.id)
     await supabase.from('team_players').delete().eq('player_id', playerId).in('team_id', sessionTeamIds)
     if (teamId) await supabase.from('team_players').insert({ player_id: playerId, team_id: teamId })
     loadAll()
   }
 
-async function generateMatches() {
+  async function generateMatches() {
     if (matches.length > 0) {
       if (!confirm('Matches already exist. Delete and regenerate?')) return
       await supabase.from('matches').delete().eq('session_id', id)
@@ -196,7 +195,7 @@ async function generateMatches() {
     loadAll()
   }
 
-async function addGoal(matchId, teamId, playerId = null) {
+  async function addGoal(matchId, teamId, playerId = null) {
     await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: playerId || null })
     const match = matches.find(m => m.id === matchId)
     const isA = match.team_a_id === teamId
@@ -237,7 +236,6 @@ async function addGoal(matchId, teamId, playerId = null) {
   if (loading) return <p>Loading…</p>
   if (!session) return <p>Session not found.</p>
 
-  // Stats per team
   const teamStats = teams.map(t => {
     let played = 0, wins = 0, draws = 0, losses = 0, gf = 0, ga = 0
     matches.forEach(m => {
@@ -257,10 +255,10 @@ async function addGoal(matchId, teamId, playerId = null) {
     return { ...t, played, wins, draws, losses, gf, ga, points: wins * 3 + draws }
   }).sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga))
 
-  // Top scorers in this session
   const scorerMap = {}
   goals.forEach(g => {
-    const name = g.players?.name || 'Unknown'
+    if (!g.players) return
+    const name = g.players.name
     scorerMap[name] = (scorerMap[name] || 0) + 1
   })
   const topScorers = Object.entries(scorerMap).sort((a, b) => b[1] - a[1])
@@ -275,7 +273,6 @@ async function addGoal(matchId, teamId, playerId = null) {
         {isAdmin && <button onClick={deleteSession} className="text-red-600 text-sm">Delete</button>}
       </div>
 
-      {/* Standings */}
       <section className="bg-white border rounded-lg p-4">
         <h2 className="font-bold mb-2">Standings</h2>
         <table className="w-full text-sm">
@@ -292,7 +289,6 @@ async function addGoal(matchId, teamId, playerId = null) {
         </table>
       </section>
 
-      {/* Teams & roster */}
       <section className="bg-white border rounded-lg p-4">
         <h2 className="font-bold mb-2">Teams</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -334,7 +330,6 @@ async function addGoal(matchId, teamId, playerId = null) {
         )}
       </section>
 
-{/* Matches */}
       <section className="bg-white border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold">Matches</h2>
@@ -367,7 +362,7 @@ async function addGoal(matchId, teamId, playerId = null) {
                             {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
                           </div>
                         </div>
-                {isAdmin && (
+                        {isAdmin && (
                           <div className="grid grid-cols-2 gap-2 mt-3">
                             <div>
                               <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
@@ -393,7 +388,7 @@ async function addGoal(matchId, teamId, playerId = null) {
                         )}
                         {goals.filter(g => g.match_id === m.id).length > 0 && (
                           <div className="mt-2 text-xs text-gray-600">
-Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team Goal').join(', ')}
+                            Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team Goal').join(', ')}
                           </div>
                         )}
                       </div>
@@ -412,7 +407,6 @@ Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team
         )}
       </section>
 
-      {/* Top scorers */}
       {topScorers.length > 0 && (
         <section className="bg-white border rounded-lg p-4">
           <h2 className="font-bold mb-2">Top scorers (this session)</h2>
@@ -422,7 +416,6 @@ Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team
         </section>
       )}
 
-      {/* Voting */}
       <section className="bg-white border rounded-lg p-4">
         <h2 className="font-bold mb-2">Voting</h2>
         {session.voting_open
@@ -534,7 +527,6 @@ function VotePage() {
   if (!session) return <p>Loading…</p>
   if (!session.voting_open) return <p>Voting is not open for this session.</p>
 
-  // group results by category
   const byCat = (cat) => Object.values(results).filter(r => r.category === cat).sort((a,b) => b.count - a.count)
 
   return (
@@ -552,7 +544,6 @@ function VotePage() {
         <p className="text-fulda font-semibold">✅ Thanks for voting! See live results below.</p>
       )}
 
-      {/* live results */}
       <div className="space-y-4">
         {[
           ['best_player','🏆 Best Player'],
