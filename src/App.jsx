@@ -63,7 +63,7 @@ function HomePage() {
 
   useEffect(() => { loadSessions() }, [])
 
-  loadSessions() {
+async function loadSessions() {
     const { data } = await supabase.from('sessions').select('*').order('date', { ascending: false })
     setSessions(data || [])
     setLoading(false)
@@ -122,7 +122,7 @@ function SessionPage() {
 
   useEffect(() => { loadAll() }, [id])
 
-  loadAll() {
+async function loadAll() {
     setLoading(true)
     const [sRes, tRes, pRes, tpRes, mRes, gRes] = await Promise.all([
       supabase.from('sessions').select('*').eq('id', id).single(),
