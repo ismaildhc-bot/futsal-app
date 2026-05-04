@@ -119,6 +119,7 @@ function SessionPage() {
   const [matches, setMatches] = useState([])
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
+  const [assistPickerFor, setAssistPickerFor] = useState(null) // goal id awaiting assist pick
 
   useEffect(() => { loadAll() }, [id])
 
@@ -130,7 +131,7 @@ function SessionPage() {
       supabase.from('players').select('*').order('name'),
       supabase.from('team_players').select('*, players(*), teams!inner(session_id)').eq('teams.session_id', id),
       supabase.from('matches').select('*').eq('session_id', id).order('match_order'),
-      supabase.from('goals').select('*, players(name), matches!inner(session_id)').eq('matches.session_id', id),
+      supabase.from('goals').select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name), matches!inner(session_id)').eq('matches.session_id', id),
     ])
     setSession(sRes.data)
     setTeams(tRes.data || [])
@@ -183,6 +184,24 @@ function SessionPage() {
     loadAll()
   }
 
+  async function addMatchToRound(roundNum) {
+    if (teams.length < 2) { alert('Need at least 2 teams'); return }
+    const labelList = teams.map(t => t.label).join(', ')
+    const aLabel = prompt(`First team label? (${labelList})`)
+    if (!aLabel) return
+    const bLabel = prompt(`Second team label? (${labelList})`)
+    if (!bLabel) return
+    const a = teams.find(t => t.label.toLowerCase() === aLabel.trim().toLowerCase())
+    const b = teams.find(t => t.label.toLowerCase() === bLabel.trim().toLowerCase())
+    if (!a || !b) { alert('Team label not found'); return }
+    if (a.id === b.id) { alert('Choose two different teams'); return }
+    const maxOrder = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.match_order))
+    await supabase.from('matches').insert({
+      session_id: id, team_a_id: a.id, team_b_id: b.id, match_order: maxOrder + 1, round: roundNum,
+    })
+    loadAll()
+  }
+
   async function deleteRound(roundNum) {
     if (!confirm(`Delete all matches in Round ${roundNum}?`)) return
     await supabase.from('matches').delete().eq('session_id', id).eq('round', roundNum)
@@ -207,17 +226,32 @@ function SessionPage() {
     loadAll()
   }
 
-  async function removeLastGoal(matchId, teamId) {
-    const match = matches.find(m => m.id === matchId)
-    const teamGoals = goals.filter(g => g.match_id === matchId && g.team_id === teamId)
-    if (teamGoals.length === 0) return
-    const last = teamGoals[teamGoals.length - 1]
-    await supabase.from('goals').delete().eq('id', last.id)
-    const isA = match.team_a_id === teamId
-    await supabase.from('matches').update({
-      score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
-      score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
-    }).eq('id', matchId)
+  async function deleteGoal(goalId) {
+    if (!confirm('Delete this goal?')) return
+    const goal = goals.find(g => g.id === goalId)
+    if (!goal) return
+    const match = matches.find(m => m.id === goal.match_id)
+    await supabase.from('goals').delete().eq('id', goalId)
+    if (match) {
+      const isA = match.team_a_id === goal.team_id
+      await supabase.from('matches').update({
+        score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
+        score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
+      }).eq('id', goal.match_id)
+    }
+    loadAll()
+  }
+
+  async function setAssist(goalId, assistPlayerId) {
+    await supabase.from('goals').update({ assist_player_id: assistPlayerId || null }).eq('id', goalId)
+    setAssistPickerFor(null)
+    loadAll()
+  }
+
+  async function renameTeam(teamId, currentLabel) {
+    const newLabel = prompt('New team name:', currentLabel)
+    if (!newLabel || newLabel.trim() === '' || newLabel.trim() === currentLabel) return
+    await supabase.from('teams').update({ label: newLabel.trim() }).eq('id', teamId)
     loadAll()
   }
 
@@ -296,7 +330,10 @@ function SessionPage() {
             const players = teamPlayers.filter(tp => tp.team_id === t.id)
             return (
               <div key={t.id} className="border rounded p-3">
-                <div className="font-semibold mb-1">Team {t.label} ({players.length})</div>
+                <div className="font-semibold mb-1 flex items-center gap-2">
+                  <span>Team {t.label} ({players.length})</span>
+                  {isAdmin && <button onClick={() => renameTeam(t.id, t.label)} className="text-xs text-gray-500 hover:text-fulda">✏️ rename</button>}
+                </div>
                 <ul className="text-sm">
                   {players.map(p => <li key={p.id} className="flex justify-between">
                     <span>{p.players?.name}</span>
@@ -353,6 +390,7 @@ function SessionPage() {
                     const b = teams.find(t => t.id === m.team_b_id)
                     const aPlayers = teamPlayers.filter(tp => tp.team_id === m.team_a_id)
                     const bPlayers = teamPlayers.filter(tp => tp.team_id === m.team_b_id)
+                    const matchGoals = goals.filter(g => g.match_id === m.id)
                     return (
                       <div key={m.id} className="border rounded p-3">
                         <div className="flex justify-between items-center">
@@ -372,7 +410,6 @@ function SessionPage() {
                                 <option value="">or pick scorer…</option>
                                 {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
                               </select>
-                              <button onClick={() => removeLastGoal(m.id, m.team_a_id)} className="text-red-500 text-xs mt-1">undo last</button>
                             </div>
                             <div>
                               <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
@@ -382,18 +419,46 @@ function SessionPage() {
                                 <option value="">or pick scorer…</option>
                                 {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
                               </select>
-                              <button onClick={() => removeLastGoal(m.id, m.team_b_id)} className="text-red-500 text-xs mt-1">undo last</button>
                             </div>
                           </div>
                         )}
-                        {goals.filter(g => g.match_id === m.id).length > 0 && (
-                          <div className="mt-2 text-xs text-gray-600">
-                            Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team Goal').join(', ')}
+                        {matchGoals.length > 0 && (
+                          <div className="mt-3 border-t pt-2 space-y-1">
+                            <div className="text-xs font-semibold text-gray-500 mb-1">Goals scored:</div>
+                            {matchGoals.map(g => {
+                              const teamLabel = g.team_id === m.team_a_id ? a?.label : b?.label
+                              const samePool = g.team_id === m.team_a_id ? aPlayers : bPlayers
+                              const isPicking = assistPickerFor === g.id
+                              return (
+                                <div key={g.id} className="flex items-center justify-between text-sm bg-gray-50 px-2 py-1 rounded">
+                                  <div className="flex-1 flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs text-gray-500">Team {teamLabel}</span>
+                                    <span>⚽ {g.players?.name || 'Team Goal'}</span>
+                                    {g.assist_player?.name && <span>🎯 {g.assist_player.name}</span>}
+                                    {isAdmin && g.player_id && !g.assist_player_id && !isPicking && (
+                                      <button onClick={() => setAssistPickerFor(g.id)} className="text-xs text-fulda underline">+ assist</button>
+                                    )}
+                                    {isAdmin && isPicking && (
+                                      <select autoFocus onChange={e => setAssist(g.id, e.target.value)} onBlur={() => setAssistPickerFor(null)} className="text-xs border rounded px-1 py-0.5">
+                                        <option value="">— pick assist —</option>
+                                        {samePool.filter(p => p.player_id !== g.player_id).map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
+                                      </select>
+                                    )}
+                                  </div>
+                                  {isAdmin && <button onClick={() => deleteGoal(g.id)} className="text-red-500 text-xs ml-2">❌</button>}
+                                </div>
+                              )
+                            })}
                           </div>
                         )}
                       </div>
                     )
                   })}
+                  {isAdmin && (
+                    <button onClick={() => addMatchToRound(roundNum)} className="w-full text-xs border border-dashed border-fulda text-fulda py-2 rounded hover:bg-fulda hover:text-white">
+                      + Add match to Round {roundNum}
+                    </button>
+                  )}
                 </div>
               </div>
             )
