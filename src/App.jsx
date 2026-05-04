@@ -36,12 +36,9 @@ function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Detect if we're on a session detail page
   const sessionMatch = location.pathname.match(/^\/session\/([^/]+)/)
   const inSession = !!sessionMatch
-  const sessionId = sessionMatch ? sessionMatch[1] : null
 
-  // Top-level nav items
   const topNav = [
     { to: '/',            icon: '🏠', label: 'Sessions',    active: location.pathname === '/' },
     { to: '/players',     icon: '👥', label: 'Players',     active: location.pathname === '/players' },
@@ -50,7 +47,6 @@ function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
-      {/* HEADER */}
       <header className="bg-fulda text-white shadow">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -65,10 +61,8 @@ function Layout({ children }) {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="max-w-3xl mx-auto px-4 py-5">{children}</main>
 
-      {/* BOTTOM NAV (only on top-level pages, not in session) */}
       {!inSession && (
         <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-lg">
           <div className="max-w-3xl mx-auto grid grid-cols-3">
@@ -151,7 +145,7 @@ function SessionPage() {
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
   const [assistPickerFor, setAssistPickerFor] = useState(null)
-  const [activeTab, setActiveTab] = useState('standings') // 'standings' | 'teams' | 'matches'
+  const [activeTab, setActiveTab] = useState('standings')
 
   useEffect(() => { loadAll() }, [id])
 
@@ -349,6 +343,12 @@ function SessionPage() {
   })
   const topScorers = Object.entries(scorerMap).sort((a, b) => b[1] - a[1])
 
+  // Split players into assigned (in this session) and unassigned
+  const assignedPlayerIds = new Set(teamPlayers.map(tp => tp.player_id))
+  const unassignedPlayers = allPlayers.filter(p => !assignedPlayerIds.has(p.id))
+  const assignedCount = assignedPlayerIds.size
+  const unassignedCount = unassignedPlayers.length
+
   const GoalRow = ({ g, samePool }) => {
     const isPicking = assistPickerFor === g.id
     return (
@@ -371,6 +371,32 @@ function SessionPage() {
     )
   }
 
+  // Renders one row in the assign-player list (used for both assigned and unassigned sections)
+  const PlayerAssignRow = ({ player, currentTeamId }) => (
+    <div className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
+      <span className="flex-1">
+        {player.name}
+        {currentTeamId && (
+          <span className="text-fulda font-bold ml-1">→ {teams.find(t=>t.id===currentTeamId)?.label || ''}</span>
+        )}
+      </span>
+      <div className="flex gap-1 flex-wrap justify-end items-center">
+        {teams.map(t => (
+          <button
+            key={t.id}
+            onClick={() => assignPlayer(player.id, t.id)}
+            className={`px-2 py-1 rounded text-xs font-semibold ${currentTeamId === t.id ? 'bg-fulda text-white' : 'bg-gray-200 hover:bg-fulda hover:text-white'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+        {currentTeamId && (
+          <button onClick={() => assignPlayer(player.id, null)} className="text-red-500 text-xs px-1 font-bold">×</button>
+        )}
+      </div>
+    </div>
+  )
+
   const sessionTabs = [
     { key: 'standings', icon: '🏆', label: 'Standings' },
     { key: 'teams',     icon: '👥', label: 'Teams' },
@@ -379,7 +405,6 @@ function SessionPage() {
 
   return (
     <div className="space-y-5 pb-20">
-      {/* Session header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">{session.name || session.date}</h1>
@@ -464,24 +489,48 @@ function SessionPage() {
               )
             })}
           </div>
+
           {isAdmin && (
-            <div className="mt-5">
-              <h3 className="font-semibold text-sm mb-2">Assign players (tap player → team)</h3>
-              <div className="space-y-1 max-h-80 overflow-y-auto border rounded-lg p-2">
-                {allPlayers.map(p => {
-                  const assigned = teamPlayers.find(tp => tp.player_id === p.id)
-                  return (
-                    <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-1.5">
-                      <span>{p.name} {assigned && <span className="text-fulda font-bold">→ {teams.find(t=>t.id===assigned.team_id)?.label || ''}</span>}</span>
-                      <div className="flex gap-1 flex-wrap justify-end">
-                        {teams.map(t => (
-                          <button key={t.id} onClick={() => assignPlayer(p.id, t.id)} className="bg-gray-200 hover:bg-fulda hover:text-white px-2 py-1 rounded text-xs font-semibold">{t.label}</button>
-                        ))}
-                        {assigned && <button onClick={() => assignPlayer(p.id, null)} className="text-red-500 text-xs px-1">x</button>}
-                      </div>
-                    </div>
-                  )
-                })}
+            <div className="mt-5 space-y-4">
+              {/* Counter pill */}
+              <div className="flex gap-2 text-xs">
+                <span className="bg-fulda/10 text-fulda px-2 py-1 rounded-full font-semibold">{assignedCount} assigned</span>
+                <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-semibold">{unassignedCount} not assigned</span>
+              </div>
+
+              {/* ASSIGNED section */}
+              {assignedCount > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm mb-2 text-gray-700">✅ Assigned</h3>
+                  <div className="border rounded-lg p-2 bg-white divide-y">
+                    {teams.map(t => {
+                      const teamMembers = teamPlayers.filter(tp => tp.team_id === t.id)
+                      if (teamMembers.length === 0) return null
+                      return (
+                        <div key={t.id} className="py-2 first:pt-1 last:pb-1">
+                          <div className="text-xs font-semibold text-fulda uppercase mb-1.5 px-1">Team {t.label}</div>
+                          {teamMembers.map(tp => (
+                            <PlayerAssignRow key={tp.id} player={tp.players} currentTeamId={tp.team_id} />
+                          ))}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* UNASSIGNED section */}
+              <div>
+                <h3 className="font-semibold text-sm mb-2 text-gray-700">⏳ Not assigned yet ({unassignedCount})</h3>
+                {unassignedCount === 0 ? (
+                  <p className="text-xs text-gray-400 italic px-1">Everyone is assigned to a team.</p>
+                ) : (
+                  <div className="border rounded-lg p-2 bg-white">
+                    {unassignedPlayers.map(p => (
+                      <PlayerAssignRow key={p.id} player={p} currentTeamId={null} />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -526,7 +575,6 @@ function SessionPage() {
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 mt-2">
-                            {/* TEAM A column */}
                             <div className="space-y-2">
                               {isAdmin && (
                                 <>
@@ -547,7 +595,6 @@ function SessionPage() {
                               )}
                             </div>
 
-                            {/* TEAM B column */}
                             <div className="space-y-2">
                               {isAdmin && (
                                 <>
@@ -590,7 +637,6 @@ function SessionPage() {
         </section>
       )}
 
-      {/* SESSION BOTTOM TABS */}
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-lg">
         <div className="max-w-3xl mx-auto grid grid-cols-3">
           {sessionTabs.map(tab => (
@@ -760,20 +806,31 @@ function LeaderboardPage() {
   const [scorers, setScorers] = useState([])
   const [bestPlayers, setBestPlayers] = useState([])
   const [bestKeepers, setBestKeepers] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => { load() }, [])
   async function load() {
-    const { data: g } = await supabase.from('goals').select('players(name)')
-    const sm = {}; (g||[]).forEach(x => { if (x.players) sm[x.players.name] = (sm[x.players.name]||0)+1 })
-    setScorers(Object.entries(sm).sort((a,b)=>b[1]-a[1]))
+    setLoading(true)
+
+    // FIX: explicitly use the goals_player_id_fkey relationship (since now there are two FKs to players: scorer + assist)
+    const { data: g } = await supabase.from('goals').select('player_id, players!goals_player_id_fkey(name)')
+    const sm = {}
+    ;(g || []).forEach(x => {
+      if (x.player_id && x.players?.name) {
+        sm[x.players.name] = (sm[x.players.name] || 0) + 1
+      }
+    })
+    setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
 
     const { data: vp } = await supabase.from('votes').select('players(name), category').eq('category','best_player')
-    const pm = {}; (vp||[]).forEach(x => { if (x.players) pm[x.players.name] = (pm[x.players.name]||0)+1 })
-    setBestPlayers(Object.entries(pm).sort((a,b)=>b[1]-a[1]))
+    const pm = {}; (vp || []).forEach(x => { if (x.players) pm[x.players.name] = (pm[x.players.name] || 0) + 1 })
+    setBestPlayers(Object.entries(pm).sort((a,b) => b[1] - a[1]))
 
     const { data: vk } = await supabase.from('votes').select('players(name), category').eq('category','best_goalkeeper')
-    const km = {}; (vk||[]).forEach(x => { if (x.players) km[x.players.name] = (km[x.players.name]||0)+1 })
-    setBestKeepers(Object.entries(km).sort((a,b)=>b[1]-a[1]))
+    const km = {}; (vk || []).forEach(x => { if (x.players) km[x.players.name] = (km[x.players.name] || 0) + 1 })
+    setBestKeepers(Object.entries(km).sort((a,b) => b[1] - a[1]))
+
+    setLoading(false)
   }
 
   const Section = ({ title, list }) => (
@@ -783,10 +840,13 @@ function LeaderboardPage() {
         <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => <li key={n} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span><span className="font-bold text-fulda">{c}</span></li>)}</ol>}
     </div>
   )
+
+  if (loading) return <p>Loading…</p>
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Season Leaderboard</h1>
-      <Section title="⚽ Top Scorers" list={scorers} />
+      <Section title="⚽ Top Scorers (all sessions)" list={scorers} />
       <Section title="🏆 Most Best Player Awards" list={bestPlayers} />
       <Section title="🧤 Most Best Goalkeeper Awards" list={bestKeepers} />
     </div>
