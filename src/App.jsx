@@ -63,13 +63,13 @@ function HomePage() {
 
   useEffect(() => { loadSessions() }, [])
 
-  async function loadSessions() {
+  loadSessions() {
     const { data } = await supabase.from('sessions').select('*').order('date', { ascending: false })
     setSessions(data || [])
     setLoading(false)
   }
 
-  async function createSession() {
+  createSession() {
     const today = new Date().toISOString().split('T')[0]
 const numTeams = parseInt(prompt('How many teams? (2 to 10)', '3') || '3')
     if (numTeams < 2 || numTeams > 10) { alert('Must be between 2 and 10'); return }
@@ -122,7 +122,7 @@ function SessionPage() {
 
   useEffect(() => { loadAll() }, [id])
 
-  async function loadAll() {
+  loadAll() {
     setLoading(true)
     const [sRes, tRes, pRes, tpRes, mRes, gRes] = await Promise.all([
       supabase.from('sessions').select('*').eq('id', id).single(),
@@ -196,8 +196,8 @@ async function generateMatches() {
     loadAll()
   }
 
-  async function addGoal(matchId, teamId, playerId) {
-    await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: playerId })
+async function addGoal(matchId, teamId, playerId = null) {
+    await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: playerId || null })
     const match = matches.find(m => m.id === matchId)
     const isA = match.team_a_id === teamId
     await supabase.from('matches').update({
@@ -367,29 +367,33 @@ async function generateMatches() {
                             {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
                           </div>
                         </div>
-                        {isAdmin && (
-                          <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                {isAdmin && (
+                          <div className="grid grid-cols-2 gap-2 mt-3">
                             <div>
-                              <div className="font-semibold mb-1">Team {a?.label} goal:</div>
-                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
-                                <option value="">+ goal scorer…</option>
+                              <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
+                                +1 Team {a?.label}
+                              </button>
+                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 mt-1 text-xs text-gray-600">
+                                <option value="">or pick scorer…</option>
                                 {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
                               </select>
-                              <button onClick={() => removeLastGoal(m.id, m.team_a_id)} className="text-red-500 mt-1">undo last</button>
+                              <button onClick={() => removeLastGoal(m.id, m.team_a_id)} className="text-red-500 text-xs mt-1">undo last</button>
                             </div>
                             <div>
-                              <div className="font-semibold mb-1">Team {b?.label} goal:</div>
-                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1">
-                                <option value="">+ goal scorer…</option>
+                              <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-lg py-3 rounded active:scale-95 transition">
+                                +1 Team {b?.label}
+                              </button>
+                              <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border rounded px-1 py-1 mt-1 text-xs text-gray-600">
+                                <option value="">or pick scorer…</option>
                                 {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
                               </select>
-                              <button onClick={() => removeLastGoal(m.id, m.team_b_id)} className="text-red-500 mt-1">undo last</button>
+                              <button onClick={() => removeLastGoal(m.id, m.team_b_id)} className="text-red-500 text-xs mt-1">undo last</button>
                             </div>
                           </div>
                         )}
                         {goals.filter(g => g.match_id === m.id).length > 0 && (
                           <div className="mt-2 text-xs text-gray-600">
-                            Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name).join(', ')}
+Goals: {goals.filter(g => g.match_id === m.id).map(g => g.players?.name || 'Team Goal').join(', ')}
                           </div>
                         )}
                       </div>
