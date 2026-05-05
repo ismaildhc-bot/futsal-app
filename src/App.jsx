@@ -2,6 +2,24 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from './supabase.js'
 
+const HS_LOGO = 'https://www.hs-fulda.de/assets/images/logo_header.svg'
+
+// =================== HELPERS ===================
+function todayISO() {
+  return new Date().toISOString().split('T')[0]
+}
+function isToday(dateStr) {
+  return dateStr === todayISO()
+}
+function LiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+      <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+      LIVE TODAY
+    </span>
+  )
+}
+
 // =================== AUTH HOOK ===================
 function useAuth() {
   const [user, setUser] = useState(null)
@@ -49,15 +67,18 @@ function Layout({ children }) {
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <header className="bg-fulda text-white shadow">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {inSession && (
-              <button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm">← Back</button>
+              <button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">← Back</button>
             )}
-            <Link to="/" className="text-lg font-bold">⚽ Futsal Kurs</Link>
+            <Link to="/" className="flex items-center gap-2 min-w-0">
+              <img src={HS_LOGO} alt="Hochschule Fulda" className="h-7 w-auto shrink-0" />
+              <span className="text-lg font-bold truncate">Futsal Kurs</span>
+            </Link>
           </div>
           {isAdmin
-            ? <span className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold">ADMIN</span>
-            : <Link to="/login" className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold">Login</Link>}
+            ? <span className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold shrink-0">ADMIN</span>
+            : <Link to="/login" className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold shrink-0">Login</Link>}
         </div>
       </header>
 
@@ -95,7 +116,7 @@ function HomePage() {
   }
 
   async function createSession() {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayISO()
     const numTeams = parseInt(prompt('How many teams? (2 to 10)', '3') || '3')
     if (numTeams < 2 || numTeams > 10) { alert('Must be between 2 and 10'); return }
     const { data, error } = await supabase.from('sessions')
@@ -117,17 +138,27 @@ function HomePage() {
       </div>
       {sessions.length === 0 && <p className="text-gray-500 text-sm">No sessions yet.</p>}
       <div className="space-y-3">
-        {sessions.map(s => (
-          <Link key={s.id} to={`/session/${s.id}`} className="block bg-white border rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold">{s.name || s.date}</div>
-                <div className="text-sm text-gray-500 mt-0.5">{s.date} · {s.num_teams} teams</div>
+        {sessions.map(s => {
+          const live = isToday(s.date)
+          return (
+            <Link
+              key={s.id}
+              to={`/session/${s.id}`}
+              className={`block bg-white border rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition ${live ? 'ring-2 ring-fulda border-fulda' : ''}`}
+            >
+              <div className="flex justify-between items-center">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold">{s.name || s.date}</span>
+                    {live && <LiveBadge />}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-0.5">{s.date} · {s.num_teams} teams</div>
+                </div>
+                {s.voting_open && <span className="bg-fulda text-white text-xs px-2 py-1 rounded-full font-semibold shrink-0 ml-2">VOTING</span>}
               </div>
-              {s.voting_open && <span className="bg-fulda text-white text-xs px-2 py-1 rounded-full font-semibold">VOTING</span>}
-            </div>
-          </Link>
-        ))}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
@@ -316,6 +347,8 @@ function SessionPage() {
   if (loading) return <p>Loading…</p>
   if (!session) return <p>Session not found.</p>
 
+  const live = isToday(session.date)
+
   const teamStats = teams.map(t => {
     let played = 0, wins = 0, draws = 0, losses = 0, gf = 0, ga = 0
     matches.forEach(m => {
@@ -343,7 +376,6 @@ function SessionPage() {
   })
   const topScorers = Object.entries(scorerMap).sort((a, b) => b[1] - a[1])
 
-  // Split players into assigned (in this session) and unassigned
   const assignedPlayerIds = new Set(teamPlayers.map(tp => tp.player_id))
   const unassignedPlayers = allPlayers.filter(p => !assignedPlayerIds.has(p.id))
   const assignedCount = assignedPlayerIds.size
@@ -371,7 +403,6 @@ function SessionPage() {
     )
   }
 
-  // Renders one row in the assign-player list (used for both assigned and unassigned sections)
   const PlayerAssignRow = ({ player, currentTeamId }) => (
     <div className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
       <span className="flex-1">
@@ -406,11 +437,14 @@ function SessionPage() {
   return (
     <div className="space-y-5 pb-20">
       <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold">{session.name || session.date}</h1>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold">{session.name || session.date}</h1>
+            {live && <LiveBadge />}
+          </div>
           <p className="text-sm text-gray-500 mt-0.5">{session.date} · {session.num_teams} teams</p>
         </div>
-        {isAdmin && <button onClick={deleteSession} className="text-red-600 text-sm">Delete</button>}
+        {isAdmin && <button onClick={deleteSession} className="text-red-600 text-sm shrink-0 ml-2">Delete</button>}
       </div>
 
       {/* ============ STANDINGS TAB ============ */}
@@ -492,13 +526,11 @@ function SessionPage() {
 
           {isAdmin && (
             <div className="mt-5 space-y-4">
-              {/* Counter pill */}
               <div className="flex gap-2 text-xs">
                 <span className="bg-fulda/10 text-fulda px-2 py-1 rounded-full font-semibold">{assignedCount} assigned</span>
                 <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-semibold">{unassignedCount} not assigned</span>
               </div>
 
-              {/* ASSIGNED section */}
               {assignedCount > 0 && (
                 <div>
                   <h3 className="font-semibold text-sm mb-2 text-gray-700">✅ Assigned</h3>
@@ -519,7 +551,6 @@ function SessionPage() {
                 </div>
               )}
 
-              {/* UNASSIGNED section */}
               <div>
                 <h3 className="font-semibold text-sm mb-2 text-gray-700">⏳ Not assigned yet ({unassignedCount})</h3>
                 {unassignedCount === 0 ? (
@@ -811,8 +842,6 @@ function LeaderboardPage() {
   useEffect(() => { load() }, [])
   async function load() {
     setLoading(true)
-
-    // FIX: explicitly use the goals_player_id_fkey relationship (since now there are two FKs to players: scorer + assist)
     const { data: g } = await supabase.from('goals').select('player_id, players!goals_player_id_fkey(name)')
     const sm = {}
     ;(g || []).forEach(x => {
