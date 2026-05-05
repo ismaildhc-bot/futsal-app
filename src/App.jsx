@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from './supabase.js'
 
-const HS_LOGO = 'https://www.hs-fulda.de/assets/images/logo_header.svg'
+const HS_LOGO = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
 
 // =================== HELPERS ===================
 function todayISO() {
@@ -13,9 +13,9 @@ function isToday(dateStr) {
 }
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
-      <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-      LIVE TODAY
+    <span className="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+      LIVE
     </span>
   )
 }
@@ -66,13 +66,15 @@ function Layout({ children }) {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24">
       <header className="bg-fulda text-white shadow">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {inSession && (
               <button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">← Back</button>
             )}
-            <Link to="/" className="flex items-center gap-2 min-w-0">
-              <img src={HS_LOGO} alt="Hochschule Fulda" className="h-7 w-auto shrink-0" />
+            <Link to="/" className="flex items-center gap-2.5 min-w-0">
+              <span className="bg-white rounded-md px-2 py-1.5 shrink-0 shadow-sm">
+                <img src={HS_LOGO} alt="Hochschule Fulda" className="h-6 w-auto block" />
+              </span>
               <span className="text-lg font-bold truncate">Futsal Kurs</span>
             </Link>
           </div>
@@ -144,7 +146,7 @@ function HomePage() {
             <Link
               key={s.id}
               to={`/session/${s.id}`}
-              className={`block bg-white border rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition ${live ? 'ring-2 ring-fulda border-fulda' : ''}`}
+              className={`block bg-white border rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition ${live ? 'ring-2 ring-red-400 border-red-400' : ''}`}
             >
               <div className="flex justify-between items-center">
                 <div className="min-w-0">
@@ -300,6 +302,45 @@ function SessionPage() {
       score_b: !isA ? match.score_b + 1 : match.score_b,
       played: true,
     }).eq('id', matchId)
+    loadAll()
+  }
+
+  // NEW: end-of-match score entry
+  async function setFinalScore(matchId) {
+    const match = matches.find(m => m.id === matchId)
+    if (!match) return
+    const a = teams.find(t => t.id === match.team_a_id)
+    const b = teams.find(t => t.id === match.team_b_id)
+
+    const aStr = prompt(`Final score for Team ${a?.label}?`, String(match.score_a))
+    if (aStr === null) return
+    const bStr = prompt(`Final score for Team ${b?.label}?`, String(match.score_b))
+    if (bStr === null) return
+
+    const newA = parseInt(aStr)
+    const newB = parseInt(bStr)
+    if (isNaN(newA) || isNaN(newB) || newA < 0 || newB < 0) { alert('Enter valid numbers'); return }
+
+    const existingGoals = goals.filter(g => g.match_id === matchId)
+    if (existingGoals.length > 0) {
+      const choice = confirm(
+        `This match already has ${existingGoals.length} recorded goal(s).\n\n` +
+        `OK = REPLACE all existing goals with the new score (${newA}-${newB}).\n` +
+        `Cancel = keep existing goals (no change).`
+      )
+      if (!choice) return
+      await supabase.from('goals').delete().eq('match_id', matchId)
+    }
+
+    const inserts = []
+    for (let i = 0; i < newA; i++) inserts.push({ match_id: matchId, team_id: match.team_a_id, player_id: null })
+    for (let i = 0; i < newB; i++) inserts.push({ match_id: matchId, team_id: match.team_b_id, player_id: null })
+    if (inserts.length > 0) await supabase.from('goals').insert(inserts)
+
+    await supabase.from('matches').update({
+      score_a: newA, score_b: newB, played: newA + newB > 0,
+    }).eq('id', matchId)
+
     loadAll()
   }
 
@@ -646,6 +687,13 @@ function SessionPage() {
                               )}
                             </div>
                           </div>
+
+                          {/* NEW: end-of-match score entry */}
+                          {isAdmin && (
+                            <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 text-gray-700 py-1.5 rounded-lg hover:bg-gray-100 font-semibold">
+                              📝 Set final score directly
+                            </button>
+                          )}
                         </div>
                       )
                     })}
