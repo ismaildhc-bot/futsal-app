@@ -1,11 +1,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { supabase } from './supabase.js'
 
 const HS_LOGO = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
 
-// =================== I18N (translations) ===================
 const translations = {
   en: {
     sessions: 'Sessions', players: 'Players', leaderboard: 'Leaderboard',
@@ -14,8 +13,7 @@ const translations = {
     no_sessions: 'No sessions yet.', live: 'LIVE', voting: 'VOTING',
     delete: 'Delete', delete_round: '🗑 Delete', generate_matches: 'Generate matches',
     no_matches: 'No matches yet. Click "Generate matches" once teams are set.',
-    or_pick_scorer: 'or pick scorer…', team_goal: 'Team Goal',
-    add_assist: '+ assist', pick_assist: '— pick assist —',
+    team_goal: 'Team Goal',
     set_final_score: '📝 Set final score directly',
     add_match_round: '+ Add match to Round',
     add_round: '+ Add another round',
@@ -31,6 +29,7 @@ const translations = {
     unassigned_section: '⏳ Not assigned yet',
     everyone_assigned: 'Everyone is assigned to a team.',
     rename_team: 'New team name:',
+    rename_player: 'New player name:',
     no_players_team: 'No players yet',
     remove: 'remove', no_data: 'No data yet.',
     season_lb: 'Season Leaderboard',
@@ -67,6 +66,11 @@ const translations = {
     replace_existing_goals: 'This match already has',
     recorded_goals_warn: 'recorded goal(s).\n\nOK = REPLACE all existing goals with the new score',
     cancel_keep: '.\nCancel = keep existing goals (no change).',
+    appearances: 'Appearances',
+    edit: 'Edit',
+    back_to_players: '← Back to players',
+    player_not_found: 'Player not found.',
+    goals_count: 'Goals',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
@@ -75,8 +79,7 @@ const translations = {
     no_sessions: 'Noch keine Termine.', live: 'LIVE', voting: 'ABSTIMMUNG',
     delete: 'Löschen', delete_round: '🗑 Löschen', generate_matches: 'Spiele erstellen',
     no_matches: 'Noch keine Spiele. „Spiele erstellen" klicken, sobald Teams stehen.',
-    or_pick_scorer: 'oder Schütze wählen…', team_goal: 'Team-Tor',
-    add_assist: '+ Assist', pick_assist: '— Assist wählen —',
+    team_goal: 'Team-Tor',
     set_final_score: '📝 Endstand direkt eintragen',
     add_match_round: '+ Spiel hinzufügen zu Runde',
     add_round: '+ Weitere Runde',
@@ -92,6 +95,7 @@ const translations = {
     unassigned_section: '⏳ Noch nicht zugeteilt',
     everyone_assigned: 'Alle sind einem Team zugeteilt.',
     rename_team: 'Neuer Teamname:',
+    rename_player: 'Neuer Spielername:',
     no_players_team: 'Noch keine Spieler',
     remove: 'entfernen', no_data: 'Noch keine Daten.',
     season_lb: 'Saison-Bestenliste',
@@ -128,6 +132,11 @@ const translations = {
     replace_existing_goals: 'Dieses Spiel hat bereits',
     recorded_goals_warn: 'erfasste Tor(e).\n\nOK = ALLE bestehenden Tore mit neuem Stand ERSETZEN',
     cancel_keep: '.\nAbbrechen = bestehende Tore behalten (keine Änderung).',
+    appearances: 'Einsätze',
+    edit: 'Bearbeiten',
+    back_to_players: '← Zurück zu Spielern',
+    player_not_found: 'Spieler nicht gefunden.',
+    goals_count: 'Tore',
   },
 }
 
@@ -141,7 +150,6 @@ function LangProvider({ children }) {
 }
 const useT = () => useContext(LangCtx)
 
-// =================== THEME (dark mode) ===================
 const ThemeCtx = createContext({ theme: 'light', setTheme: () => {} })
 
 function ThemeProvider({ children }) {
@@ -160,7 +168,6 @@ function ThemeProvider({ children }) {
 }
 const useTheme = () => useContext(ThemeCtx)
 
-// =================== HELPERS ===================
 function todayISO() { return new Date().toISOString().split('T')[0] }
 function isToday(dateStr) { return dateStr === todayISO() }
 
@@ -174,7 +181,6 @@ function LiveBadge() {
   )
 }
 
-// =================== AUTH HOOK ===================
 function useAuth() {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -198,7 +204,6 @@ function useAuth() {
   return { user, isAdmin, loading }
 }
 
-// =================== LAYOUT ===================
 function Layout({ children }) {
   const { isAdmin } = useAuth()
   const { lang, setLang, t } = useT()
@@ -211,7 +216,7 @@ function Layout({ children }) {
 
   const topNav = [
     { to: '/',            icon: '🏠', label: t('sessions'),    active: location.pathname === '/' },
-    { to: '/players',     icon: '👥', label: t('players'),     active: location.pathname === '/players' },
+    { to: '/players',     icon: '👥', label: t('players'),     active: location.pathname.startsWith('/players') || location.pathname.startsWith('/player/') },
     { to: '/leaderboard', icon: '⭐', label: t('leaderboard'), active: location.pathname === '/leaderboard' },
   ]
 
@@ -231,18 +236,10 @@ function Layout({ children }) {
             </Link>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setLang(lang === 'en' ? 'de' : 'en')}
-              className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-2 py-1 rounded"
-              title="Toggle language"
-            >
+            <button onClick={() => setLang(lang === 'en' ? 'de' : 'en')} className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-2 py-1 rounded">
               {lang === 'en' ? 'DE' : 'EN'}
             </button>
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="bg-white/15 hover:bg-white/25 text-white text-xs px-2 py-1 rounded"
-              title="Toggle dark mode"
-            >
+            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="bg-white/15 hover:bg-white/25 text-white text-xs px-2 py-1 rounded">
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             {isAdmin
@@ -270,7 +267,6 @@ function Layout({ children }) {
   )
 }
 
-// =================== HOME / SESSIONS LIST ===================
 function HomePage() {
   const { isAdmin } = useAuth()
   const { t } = useT()
@@ -311,11 +307,7 @@ function HomePage() {
         {sessions.map(s => {
           const live = isToday(s.date)
           return (
-            <Link
-              key={s.id}
-              to={`/session/${s.id}`}
-              className={`block bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition ${live ? 'ring-2 ring-red-400 border-red-400' : ''}`}
-            >
+            <Link key={s.id} to={`/session/${s.id}`} className={`block bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm hover:shadow active:scale-[0.99] transition ${live ? 'ring-2 ring-red-400 border-red-400' : ''}`}>
               <div className="flex justify-between items-center">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -334,7 +326,6 @@ function HomePage() {
   )
 }
 
-// =================== SESSION DETAIL ===================
 function SessionPage() {
   const { id } = useParams()
   const { isAdmin } = useAuth()
@@ -346,7 +337,6 @@ function SessionPage() {
   const [matches, setMatches] = useState([])
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
-  const [assistPickerFor, setAssistPickerFor] = useState(null)
   const [activeTab, setActiveTab] = useState('standings')
 
   useEffect(() => { loadAll() }, [id])
@@ -432,7 +422,6 @@ function SessionPage() {
     await supabase.from('matches').delete().eq('id', matchId); loadAll()
   }
 
-  // =========== OPTIMISTIC: addGoal ===========
   async function addGoal(matchId, teamId, playerId = null) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
@@ -440,12 +429,8 @@ function SessionPage() {
     const tempGoalId = `temp-${Date.now()}-${Math.random()}`
     const scorerPlayer = playerId ? allPlayers.find(p => p.id === playerId) : null
 
-    // 1. Update UI instantly
     setGoals(prev => [...prev, {
-      id: tempGoalId,
-      match_id: matchId,
-      team_id: teamId,
-      player_id: playerId || null,
+      id: tempGoalId, match_id: matchId, team_id: teamId, player_id: playerId || null,
       assist_player_id: null,
       players: scorerPlayer ? { name: scorerPlayer.name } : null,
       assist_player: null,
@@ -457,7 +442,6 @@ function SessionPage() {
       played: true,
     } : m))
 
-    // 2. Save in background, then swap temp id for real one
     try {
       const { data: insertedGoal, error: gErr } = await supabase
         .from('goals')
@@ -470,15 +454,10 @@ function SessionPage() {
         score_b: !isA ? match.score_b + 1 : match.score_b,
         played: true,
       }).eq('id', matchId)
-      // Swap temp goal for real one
       setGoals(prev => prev.map(g => g.id === tempGoalId ? insertedGoal : g))
-    } catch (e) {
-      // Failed → reload from DB to recover correct state
-      loadAll()
-    }
+    } catch (e) { loadAll() }
   }
 
-  // =========== OPTIMISTIC: setFinalScore ===========
   async function setFinalScore(matchId) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
@@ -496,7 +475,6 @@ function SessionPage() {
       if (!choice) return
     }
 
-    // 1. Update UI instantly: remove old goals for this match, add placeholder goals, update score
     const tempPrefix = `temp-final-${Date.now()}`
     const newGoalRows = []
     for (let i = 0; i < newA; i++) newGoalRows.push({
@@ -510,7 +488,6 @@ function SessionPage() {
     setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...newGoalRows])
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: newA + newB > 0 } : m))
 
-    // 2. Save in background
     try {
       if (existingGoals.length > 0) await supabase.from('goals').delete().eq('match_id', matchId)
       const inserts = []
@@ -519,17 +496,12 @@ function SessionPage() {
       if (inserts.length > 0) {
         const { data: inserted } = await supabase.from('goals').insert(inserts)
           .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
-        if (inserted) {
-          setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...inserted])
-        }
+        if (inserted) setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...inserted])
       }
       await supabase.from('matches').update({ score_a: newA, score_b: newB, played: newA + newB > 0 }).eq('id', matchId)
-    } catch (e) {
-      loadAll()
-    }
+    } catch (e) { loadAll() }
   }
 
-  // =========== OPTIMISTIC: deleteGoal ===========
   async function deleteGoal(goalId) {
     if (!confirm(t('confirm_delete_goal'))) return
     const goal = goals.find(g => g.id === goalId)
@@ -537,7 +509,6 @@ function SessionPage() {
     const match = matches.find(m => m.id === goal.match_id)
     const isA = match && match.team_a_id === goal.team_id
 
-    // 1. Update UI instantly
     setGoals(prev => prev.filter(g => g.id !== goalId))
     if (match) {
       setMatches(prev => prev.map(m => m.id === match.id ? {
@@ -547,43 +518,15 @@ function SessionPage() {
       } : m))
     }
 
-    // 2. Save in background
     try {
-      // skip DB delete for temp goals (they don't exist in DB yet)
-      if (!String(goalId).startsWith('temp-')) {
-        await supabase.from('goals').delete().eq('id', goalId)
-      }
+      if (!String(goalId).startsWith('temp-')) await supabase.from('goals').delete().eq('id', goalId)
       if (match) {
         await supabase.from('matches').update({
           score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
           score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
         }).eq('id', goal.match_id)
       }
-    } catch (e) {
-      loadAll()
-    }
-  }
-
-  // =========== OPTIMISTIC: setAssist ===========
-  async function setAssist(goalId, assistPlayerId) {
-    const assistPlayer = assistPlayerId ? allPlayers.find(p => p.id === assistPlayerId) : null
-
-    // 1. Update UI instantly
-    setGoals(prev => prev.map(g => g.id === goalId ? {
-      ...g,
-      assist_player_id: assistPlayerId || null,
-      assist_player: assistPlayer ? { name: assistPlayer.name } : null,
-    } : g))
-    setAssistPickerFor(null)
-
-    // 2. Save in background
-    try {
-      if (!String(goalId).startsWith('temp-')) {
-        await supabase.from('goals').update({ assist_player_id: assistPlayerId || null }).eq('id', goalId)
-      }
-    } catch (e) {
-      loadAll()
-    }
+    } catch (e) { loadAll() }
   }
 
   async function renameTeam(teamId, currentLabel) {
@@ -624,38 +567,13 @@ function SessionPage() {
   }).sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga))
 
   const scorerMap = {}
-  goals.forEach(g => {
-    if (!g.players) return
-    scorerMap[g.players.name] = (scorerMap[g.players.name] || 0) + 1
-  })
+  goals.forEach(g => { if (g.players) scorerMap[g.players.name] = (scorerMap[g.players.name] || 0) + 1 })
   const topScorers = Object.entries(scorerMap).sort((a, b) => b[1] - a[1])
 
   const assignedPlayerIds = new Set(teamPlayers.map(tp => tp.player_id))
   const unassignedPlayers = allPlayers.filter(p => !assignedPlayerIds.has(p.id))
   const assignedCount = assignedPlayerIds.size
   const unassignedCount = unassignedPlayers.length
-
-  const GoalRow = ({ g, samePool }) => {
-    const isPicking = assistPickerFor === g.id
-    return (
-      <div className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 px-2 py-1.5 rounded-lg">
-        <div className="flex-1 flex items-center gap-2 flex-wrap">
-          <span>⚽ {g.players?.name || t('team_goal')}</span>
-          {g.assist_player?.name && <span>🎯 {g.assist_player.name}</span>}
-          {isAdmin && g.player_id && !g.assist_player_id && !isPicking && (
-            <button onClick={() => setAssistPickerFor(g.id)} className="text-xs text-fulda dark:text-emerald-400 underline">{t('add_assist')}</button>
-          )}
-          {isAdmin && isPicking && (
-            <select autoFocus onChange={e => setAssist(g.id, e.target.value)} onBlur={() => setAssistPickerFor(null)} className="text-xs border rounded px-1 py-0.5 bg-white dark:bg-gray-900 dark:border-gray-700">
-              <option value="">{t('pick_assist')}</option>
-              {samePool.filter(p => p.player_id !== g.player_id).map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-            </select>
-          )}
-        </div>
-        {isAdmin && <button onClick={() => deleteGoal(g.id)} className="text-red-500 text-base ml-2 leading-none">❌</button>}
-      </div>
-    )
-  }
 
   const PlayerAssignRow = ({ player, currentTeamId }) => (
     <div className="flex items-center justify-between text-sm border-b dark:border-gray-800 last:border-b-0 py-2">
@@ -833,13 +751,9 @@ function SessionPage() {
                     {roundMatches.map(m => {
                       const a = teams.find(tt => tt.id === m.team_a_id)
                       const b = teams.find(tt => tt.id === m.team_b_id)
-                      const aPlayers = teamPlayers.filter(tp => tp.team_id === m.team_a_id)
-                      const bPlayers = teamPlayers.filter(tp => tp.team_id === m.team_b_id)
-                      const aGoals = goals.filter(g => g.match_id === m.id && g.team_id === m.team_a_id)
-                      const bGoals = goals.filter(g => g.match_id === m.id && g.team_id === m.team_b_id)
                       return (
                         <div key={m.id} className="border dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-900">
-                          <div className="flex justify-between items-center mb-2">
+                          <div className="flex justify-between items-center mb-3">
                             <div className="font-semibold text-sm">Match {m.match_order}: Team {a?.label} vs Team {b?.label}</div>
                             <div className="flex items-center gap-2">
                               <div className="text-xl font-bold tabular-nums">{m.score_a} - {m.score_b}</div>
@@ -847,38 +761,12 @@ function SessionPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 mt-2">
-                            <div className="space-y-2">
-                              {isAdmin && (<>
-                                <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-base py-3 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
-                                <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_a_id, e.target.value); e.target.value='' } }} className="w-full border dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800">
-                                  <option value="">{t('or_pick_scorer')}</option>
-                                  {aPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                                </select>
-                              </>)}
-                              {aGoals.length > 0 && (
-                                <div className="space-y-1 pt-1">
-                                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400">Team {a?.label}</div>
-                                  {aGoals.map(g => <GoalRow key={g.id} g={g} samePool={aPlayers} />)}
-                                </div>
-                              )}
+                          {isAdmin && (
+                            <div className="grid grid-cols-2 gap-3">
+                              <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
+                              <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
                             </div>
-                            <div className="space-y-2">
-                              {isAdmin && (<>
-                                <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-base py-3 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
-                                <select onChange={e => { if (e.target.value) { addGoal(m.id, m.team_b_id, e.target.value); e.target.value='' } }} className="w-full border dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800">
-                                  <option value="">{t('or_pick_scorer')}</option>
-                                  {bPlayers.map(p => <option key={p.id} value={p.player_id}>{p.players?.name}</option>)}
-                                </select>
-                              </>)}
-                              {bGoals.length > 0 && (
-                                <div className="space-y-1 pt-1">
-                                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400">Team {b?.label}</div>
-                                  {bGoals.map(g => <GoalRow key={g.id} g={g} samePool={bPlayers} />)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          )}
 
                           {isAdmin && (
                             <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">
@@ -921,7 +809,6 @@ function SessionPage() {
   )
 }
 
-// =================== PLAYERS PAGE ===================
 function PlayersPage() {
   const { isAdmin } = useAuth()
   const { t } = useT()
@@ -939,7 +826,8 @@ function PlayersPage() {
     if (error) alert(error.message)
     setName(''); load()
   }
-  async function del(id) {
+  async function del(e, id) {
+    e.preventDefault(); e.stopPropagation()
     if (!confirm(t('confirm_delete_player'))) return
     await supabase.from('players').delete().eq('id', id); load()
   }
@@ -955,10 +843,10 @@ function PlayersPage() {
       )}
       <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl divide-y dark:divide-gray-800 shadow-sm">
         {players.map(p => (
-          <div key={p.id} className="px-4 py-3 flex justify-between items-center">
+          <Link key={p.id} to={`/player/${p.id}`} className="px-4 py-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition">
             <span>{p.name}</span>
-            {isAdmin && <button onClick={() => del(p.id)} className="text-red-500 text-sm">{t('remove')}</button>}
-          </div>
+            {isAdmin && <button onClick={(e) => del(e, p.id)} className="text-red-500 text-sm">{t('remove')}</button>}
+          </Link>
         ))}
         {players.length === 0 && <p className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">{t('no_players')}</p>}
       </div>
@@ -966,7 +854,71 @@ function PlayersPage() {
   )
 }
 
-// =================== VOTE PAGE ===================
+function PlayerProfilePage() {
+  const { id } = useParams()
+  const { isAdmin } = useAuth()
+  const { t } = useT()
+  const navigate = useNavigate()
+  const [player, setPlayer] = useState(null)
+  const [appearances, setAppearances] = useState(0)
+  const [goalsCount, setGoalsCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => { load() }, [id])
+  async function load() {
+    setLoading(true)
+    const { data: p } = await supabase.from('players').select('*').eq('id', id).single()
+    setPlayer(p)
+    const { data: tp } = await supabase.from('team_players').select('team_id, teams!inner(session_id)').eq('player_id', id)
+    const sessionIds = new Set((tp || []).map(x => x.teams?.session_id).filter(Boolean))
+    setAppearances(sessionIds.size)
+    const { data: g } = await supabase.from('goals').select('id').eq('player_id', id)
+    setGoalsCount((g || []).length)
+    setLoading(false)
+  }
+  async function rename() {
+    const newName = prompt(t('rename_player'), player.name)
+    if (!newName || newName.trim() === '' || newName.trim() === player.name) return
+    await supabase.from('players').update({ name: newName.trim() }).eq('id', id)
+    load()
+  }
+  async function del() {
+    if (!confirm(t('confirm_delete_player'))) return
+    await supabase.from('players').delete().eq('id', id)
+    navigate('/players')
+  }
+
+  if (loading) return <p>{t('loading')}</p>
+  if (!player) return <p>{t('player_not_found')}</p>
+
+  return (
+    <div className="space-y-4">
+      <Link to="/players" className="text-sm text-gray-500 dark:text-gray-400">{t('back_to_players')}</Link>
+      <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-5 shadow-sm">
+        <div className="flex justify-between items-start mb-4">
+          <h1 className="text-2xl font-bold">{player.name}</h1>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <button onClick={rename} className="text-sm text-fulda dark:text-emerald-400 font-semibold">✏️ {t('edit')}</button>
+              <button onClick={del} className="text-sm text-red-500">{t('remove')}</button>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-fulda dark:text-emerald-400">{appearances}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase">{t('appearances')}</div>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-fulda dark:text-emerald-400">{goalsCount}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase">{t('goals_count')}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function VotePage() {
   const { sessionId } = useParams()
   const { t } = useT()
@@ -1064,7 +1016,6 @@ function getFingerprint() {
   return f
 }
 
-// =================== LEADERBOARD ===================
 function LeaderboardPage() {
   const { t } = useT()
   const { theme } = useTheme()
@@ -1097,10 +1048,7 @@ function LeaderboardPage() {
       const sid = x.matches?.session_id
       if (sid) goalCountBySessionId[sid] = (goalCountBySessionId[sid] || 0) + 1
     })
-    const chartData = (sessionsData || []).map(s => ({
-      label: s.date,
-      goals: goalCountBySessionId[s.id] || 0,
-    }))
+    const chartData = (sessionsData || []).map(s => ({ label: s.date, goals: goalCountBySessionId[s.id] || 0 }))
     setGoalsBySession(chartData)
     setLoading(false)
   }
@@ -1145,7 +1093,6 @@ function LeaderboardPage() {
   )
 }
 
-// =================== LOGIN ===================
 function LoginPage() {
   const { t } = useT()
   const [email, setEmail] = useState('')
@@ -1178,7 +1125,6 @@ function LoginPage() {
   )
 }
 
-// =================== APP ROOT ===================
 function App() {
   return (
     <ThemeProvider>
@@ -1188,6 +1134,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/session/:id" element={<SessionPage />} />
             <Route path="/players" element={<PlayersPage />} />
+            <Route path="/player/:id" element={<PlayerProfilePage />} />
             <Route path="/vote/:sessionId" element={<VotePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/login" element={<LoginPage />} />
