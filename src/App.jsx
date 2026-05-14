@@ -432,18 +432,53 @@ function SessionPage() {
     await supabase.from('matches').delete().eq('id', matchId); loadAll()
   }
 
+  // =========== OPTIMISTIC: addGoal ===========
   async function addGoal(matchId, teamId, playerId = null) {
-    await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: playerId || null })
     const match = matches.find(m => m.id === matchId)
+    if (!match) return
     const isA = match.team_a_id === teamId
-    await supabase.from('matches').update({
-      score_a: isA ? match.score_a + 1 : match.score_a,
-      score_b: !isA ? match.score_b + 1 : match.score_b,
+    const tempGoalId = `temp-${Date.now()}-${Math.random()}`
+    const scorerPlayer = playerId ? allPlayers.find(p => p.id === playerId) : null
+
+    // 1. Update UI instantly
+    setGoals(prev => [...prev, {
+      id: tempGoalId,
+      match_id: matchId,
+      team_id: teamId,
+      player_id: playerId || null,
+      assist_player_id: null,
+      players: scorerPlayer ? { name: scorerPlayer.name } : null,
+      assist_player: null,
+    }])
+    setMatches(prev => prev.map(m => m.id === matchId ? {
+      ...m,
+      score_a: isA ? m.score_a + 1 : m.score_a,
+      score_b: !isA ? m.score_b + 1 : m.score_b,
       played: true,
-    }).eq('id', matchId)
-    loadAll()
+    } : m))
+
+    // 2. Save in background, then swap temp id for real one
+    try {
+      const { data: insertedGoal, error: gErr } = await supabase
+        .from('goals')
+        .insert({ match_id: matchId, team_id: teamId, player_id: playerId || null })
+        .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
+        .single()
+      if (gErr) throw gErr
+      await supabase.from('matches').update({
+        score_a: isA ? match.score_a + 1 : match.score_a,
+        score_b: !isA ? match.score_b + 1 : match.score_b,
+        played: true,
+      }).eq('id', matchId)
+      // Swap temp goal for real one
+      setGoals(prev => prev.map(g => g.id === tempGoalId ? insertedGoal : g))
+    } catch (e) {
+      // Failed → reload from DB to recover correct state
+      loadAll()
+    }
   }
 
+  // =========== OPTIMISTIC: setFinalScore ===========
   async function setFinalScore(matchId) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
@@ -459,35 +494,96 @@ function SessionPage() {
     if (existingGoals.length > 0) {
       const choice = confirm(`${t('replace_existing_goals')} ${existingGoals.length} ${t('recorded_goals_warn')} (${newA}-${newB})${t('cancel_keep')}`)
       if (!choice) return
-      await supabase.from('goals').delete().eq('match_id', matchId)
     }
-    const inserts = []
-    for (let i = 0; i < newA; i++) inserts.push({ match_id: matchId, team_id: match.team_a_id, player_id: null })
-    for (let i = 0; i < newB; i++) inserts.push({ match_id: matchId, team_id: match.team_b_id, player_id: null })
-    if (inserts.length > 0) await supabase.from('goals').insert(inserts)
-    await supabase.from('matches').update({ score_a: newA, score_b: newB, played: newA + newB > 0 }).eq('id', matchId)
-    loadAll()
+
+    // 1. Update UI instantly: remove old goals for this match, add placeholder goals, update score
+    const tempPrefix = `temp-final-${Date.now()}`
+    const newGoalRows = []
+    for (let i = 0; i < newA; i++) newGoalRows.push({
+      id: `${tempPrefix}-a-${i}`, match_id: matchId, team_id: match.team_a_id, player_id: null,
+      assist_player_id: null, players: null, assist_player: null,
+    })
+    for (let i = 0; i < newB; i++) newGoalRows.push({
+      id: `${tempPrefix}-b-${i}`, match_id: matchId, team_id: match.team_b_id, player_id: null,
+      assist_player_id: null, players: null, assist_player: null,
+    })
+    setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...newGoalRows])
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: newA + newB > 0 } : m))
+
+    // 2. Save in background
+    try {
+      if (existingGoals.length > 0) await supabase.from('goals').delete().eq('match_id', matchId)
+      const inserts = []
+      for (let i = 0; i < newA; i++) inserts.push({ match_id: matchId, team_id: match.team_a_id, player_id: null })
+      for (let i = 0; i < newB; i++) inserts.push({ match_id: matchId, team_id: match.team_b_id, player_id: null })
+      if (inserts.length > 0) {
+        const { data: inserted } = await supabase.from('goals').insert(inserts)
+          .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
+        if (inserted) {
+          setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...inserted])
+        }
+      }
+      await supabase.from('matches').update({ score_a: newA, score_b: newB, played: newA + newB > 0 }).eq('id', matchId)
+    } catch (e) {
+      loadAll()
+    }
   }
 
+  // =========== OPTIMISTIC: deleteGoal ===========
   async function deleteGoal(goalId) {
     if (!confirm(t('confirm_delete_goal'))) return
     const goal = goals.find(g => g.id === goalId)
     if (!goal) return
     const match = matches.find(m => m.id === goal.match_id)
-    await supabase.from('goals').delete().eq('id', goalId)
+    const isA = match && match.team_a_id === goal.team_id
+
+    // 1. Update UI instantly
+    setGoals(prev => prev.filter(g => g.id !== goalId))
     if (match) {
-      const isA = match.team_a_id === goal.team_id
-      await supabase.from('matches').update({
-        score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
-        score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
-      }).eq('id', goal.match_id)
+      setMatches(prev => prev.map(m => m.id === match.id ? {
+        ...m,
+        score_a: isA ? Math.max(0, m.score_a - 1) : m.score_a,
+        score_b: !isA ? Math.max(0, m.score_b - 1) : m.score_b,
+      } : m))
     }
-    loadAll()
+
+    // 2. Save in background
+    try {
+      // skip DB delete for temp goals (they don't exist in DB yet)
+      if (!String(goalId).startsWith('temp-')) {
+        await supabase.from('goals').delete().eq('id', goalId)
+      }
+      if (match) {
+        await supabase.from('matches').update({
+          score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
+          score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
+        }).eq('id', goal.match_id)
+      }
+    } catch (e) {
+      loadAll()
+    }
   }
 
+  // =========== OPTIMISTIC: setAssist ===========
   async function setAssist(goalId, assistPlayerId) {
-    await supabase.from('goals').update({ assist_player_id: assistPlayerId || null }).eq('id', goalId)
-    setAssistPickerFor(null); loadAll()
+    const assistPlayer = assistPlayerId ? allPlayers.find(p => p.id === assistPlayerId) : null
+
+    // 1. Update UI instantly
+    setGoals(prev => prev.map(g => g.id === goalId ? {
+      ...g,
+      assist_player_id: assistPlayerId || null,
+      assist_player: assistPlayer ? { name: assistPlayer.name } : null,
+    } : g))
+    setAssistPickerFor(null)
+
+    // 2. Save in background
+    try {
+      if (!String(goalId).startsWith('temp-')) {
+        await supabase.from('goals').update({ assist_player_id: assistPlayerId || null }).eq('id', goalId)
+      }
+    } catch (e) {
+      loadAll()
+    }
   }
 
   async function renameTeam(teamId, currentLabel) {
@@ -994,7 +1090,6 @@ function LeaderboardPage() {
     const km = {}; (vk || []).forEach(x => { if (x.players) km[x.players.name] = (km[x.players.name] || 0) + 1 })
     setBestKeepers(Object.entries(km).sort((a,b) => b[1] - a[1]))
 
-    // Build "goals per session" for chart
     const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
     const goalCountBySessionId = {}
