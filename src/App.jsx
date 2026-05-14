@@ -11,12 +11,8 @@ const translations = {
     standings: 'Standings', teams: 'Teams', matches: 'Matches',
     new: '+ New', back: '← Back', admin: 'ADMIN', login: 'Login',
     no_sessions: 'No sessions yet.', live: 'LIVE', voting: 'VOTING',
-    delete: 'Delete', delete_round: '🗑 Delete', generate_matches: 'Generate matches',
-    no_matches: 'No matches yet. Click "Generate matches" once teams are set.',
-    team_goal: 'Team Goal',
+    delete: 'Delete', team_goal: 'Team Goal',
     set_final_score: '📝 Set final score directly',
-    add_match_round: '+ Add match to Round',
-    add_round: '+ Add another round',
     top_scorers_session: '⭐ Top scorers (this session)',
     top_scorers_all: '⚽ Top Scorers (all sessions)',
     voting_label: '🗳 Voting',
@@ -47,20 +43,11 @@ const translations = {
     no_votes: 'No votes yet.', voting_not_open_session: 'Voting is not open for this session.',
     session_not_found: 'Session not found.',
     confirm_delete_session: 'Delete this entire session? This cannot be undone.',
-    confirm_delete_round: 'Delete all matches in Round',
     confirm_delete_match: 'Delete this match?',
     confirm_delete_goal: 'Delete this goal?',
     confirm_delete_player: 'Remove this player?',
-    confirm_regen: 'Matches already exist. Delete and regenerate?',
     how_many_teams: 'How many teams? (2 to 10)',
     must_2_10: 'Must be between 2 and 10',
-    how_many_rounds: 'How many rounds? (each round = every team plays every other team once)',
-    must_1_20: 'Must be between 1 and 20',
-    need_2_teams: 'Need at least 2 teams',
-    first_team_label: 'First team label?',
-    second_team_label: 'Second team label?',
-    label_not_found: 'Team label not found',
-    different_teams: 'Choose two different teams',
     final_score_for_team: 'Final score for Team',
     enter_valid_numbers: 'Enter valid numbers',
     replace_existing_goals: 'This match already has',
@@ -71,18 +58,29 @@ const translations = {
     back_to_players: '← Back to players',
     player_not_found: 'Player not found.',
     goals_count: 'Goals',
+    start_session_matches: 'Start matches',
+    pick_first_match: 'Pick the first match',
+    vs: 'vs',
+    submit_score: 'Submit score',
+    next_match: 'Next match',
+    submit_session: '🏁 Submit session',
+    session_submitted: '✅ Session submitted',
+    confirm_submit_session: 'Submit the session? You can still edit past matches afterwards.',
+    confirm_reopen_session: 'Reopen the session to add more matches?',
+    reopen_session: 'Reopen session',
+    edit_match: 'Edit',
+    not_enough_teams: 'Need at least 2 teams in this session.',
+    select_two_teams: 'Select two different teams to start.',
+    finished: 'Finished',
+    current_match: 'Current match',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
     standings: 'Tabelle', teams: 'Teams', matches: 'Spiele',
     new: '+ Neu', back: '← Zurück', admin: 'ADMIN', login: 'Login',
     no_sessions: 'Noch keine Termine.', live: 'LIVE', voting: 'ABSTIMMUNG',
-    delete: 'Löschen', delete_round: '🗑 Löschen', generate_matches: 'Spiele erstellen',
-    no_matches: 'Noch keine Spiele. „Spiele erstellen" klicken, sobald Teams stehen.',
-    team_goal: 'Team-Tor',
+    delete: 'Löschen', team_goal: 'Team-Tor',
     set_final_score: '📝 Endstand direkt eintragen',
-    add_match_round: '+ Spiel hinzufügen zu Runde',
-    add_round: '+ Weitere Runde',
     top_scorers_session: '⭐ Top-Torschützen (dieser Termin)',
     top_scorers_all: '⚽ Top-Torschützen (alle Termine)',
     voting_label: '🗳 Abstimmung',
@@ -113,20 +111,11 @@ const translations = {
     no_votes: 'Noch keine Stimmen.', voting_not_open_session: 'Abstimmung für diesen Termin nicht offen.',
     session_not_found: 'Termin nicht gefunden.',
     confirm_delete_session: 'Ganzen Termin löschen? Das kann nicht rückgängig gemacht werden.',
-    confirm_delete_round: 'Alle Spiele in Runde löschen?',
     confirm_delete_match: 'Dieses Spiel löschen?',
     confirm_delete_goal: 'Dieses Tor löschen?',
     confirm_delete_player: 'Diesen Spieler entfernen?',
-    confirm_regen: 'Spiele existieren bereits. Löschen und neu erstellen?',
     how_many_teams: 'Wie viele Teams? (2 bis 10)',
     must_2_10: 'Muss zwischen 2 und 10 sein',
-    how_many_rounds: 'Wie viele Runden? (jede Runde = jedes Team spielt einmal gegen jedes andere)',
-    must_1_20: 'Muss zwischen 1 und 20 sein',
-    need_2_teams: 'Mindestens 2 Teams nötig',
-    first_team_label: 'Erstes Team-Label?',
-    second_team_label: 'Zweites Team-Label?',
-    label_not_found: 'Team-Label nicht gefunden',
-    different_teams: 'Zwei verschiedene Teams wählen',
     final_score_for_team: 'Endstand für Team',
     enter_valid_numbers: 'Gültige Zahlen eingeben',
     replace_existing_goals: 'Dieses Spiel hat bereits',
@@ -137,11 +126,25 @@ const translations = {
     back_to_players: '← Zurück zu Spielern',
     player_not_found: 'Spieler nicht gefunden.',
     goals_count: 'Tore',
+    start_session_matches: 'Spiele starten',
+    pick_first_match: 'Erstes Spiel wählen',
+    vs: 'gegen',
+    submit_score: 'Endstand bestätigen',
+    next_match: 'Nächstes Spiel',
+    submit_session: '🏁 Termin abschließen',
+    session_submitted: '✅ Termin abgeschlossen',
+    confirm_submit_session: 'Termin abschließen? Vergangene Spiele bleiben bearbeitbar.',
+    confirm_reopen_session: 'Termin wieder öffnen, um weitere Spiele hinzuzufügen?',
+    reopen_session: 'Termin wieder öffnen',
+    edit_match: 'Bearbeiten',
+    not_enough_teams: 'Mindestens 2 Teams im Termin nötig.',
+    select_two_teams: 'Zwei verschiedene Teams auswählen.',
+    finished: 'Beendet',
+    current_match: 'Aktuelles Spiel',
   },
 }
 
 const LangCtx = createContext({ lang: 'en', setLang: () => {}, t: (k) => k })
-
 function LangProvider({ children }) {
   const [lang, setLangState] = useState(() => localStorage.getItem('lang') || 'en')
   const setLang = (l) => { localStorage.setItem('lang', l); setLangState(l) }
@@ -151,7 +154,6 @@ function LangProvider({ children }) {
 const useT = () => useContext(LangCtx)
 
 const ThemeCtx = createContext({ theme: 'light', setTheme: () => {} })
-
 function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     const saved = localStorage.getItem('theme')
@@ -185,7 +187,6 @@ function useAuth() {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null); checkAdmin(session?.user)
@@ -195,7 +196,6 @@ function useAuth() {
     })
     return () => subscription.unsubscribe()
   }, [])
-
   async function checkAdmin(u) {
     if (!u) { setIsAdmin(false); setLoading(false); return }
     const { data } = await supabase.from('admins').select('email').eq('email', u.email).maybeSingle()
@@ -210,9 +210,7 @@ function Layout({ children }) {
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
-
-  const sessionMatch = location.pathname.match(/^\/session\/([^/]+)/)
-  const inSession = !!sessionMatch
+  const inSession = !!location.pathname.match(/^\/session\/([^/]+)/)
 
   const topNav = [
     { to: '/',            icon: '🏠', label: t('sessions'),    active: location.pathname === '/' },
@@ -273,14 +271,11 @@ function HomePage() {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
-
   useEffect(() => { loadSessions() }, [])
-
   async function loadSessions() {
     const { data } = await supabase.from('sessions').select('*').order('date', { ascending: false })
     setSessions(data || []); setLoading(false)
   }
-
   async function createSession() {
     const today = todayISO()
     const numTeams = parseInt(prompt(t('how_many_teams'), '3') || '3')
@@ -293,9 +288,7 @@ function HomePage() {
     await supabase.from('teams').insert(labels.map(l => ({ session_id: data.id, label: l })))
     navigate(`/session/${data.id}`)
   }
-
   if (loading) return <p>{t('loading')}</p>
-
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -313,6 +306,7 @@ function HomePage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold">{s.name || s.date}</span>
                     {live && <LiveBadge />}
+                    {s.submitted && <span className="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full font-semibold">✓</span>}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{s.date} · {s.num_teams} {t('teams').toLowerCase()}</div>
                 </div>
@@ -338,6 +332,9 @@ function SessionPage() {
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('standings')
+  const [expandedMatchId, setExpandedMatchId] = useState(null)
+  const [pickA, setPickA] = useState('')
+  const [pickB, setPickB] = useState('')
 
   useEffect(() => { loadAll() }, [id])
 
@@ -373,81 +370,21 @@ function SessionPage() {
     } catch (e) { loadAll() }
   }
 
-  async function generateMatches() {
-    if (matches.length > 0) {
-      if (!confirm(t('confirm_regen'))) return
-      await supabase.from('matches').delete().eq('session_id', id)
-    }
-    const rounds = parseInt(prompt(t('how_many_rounds'), '3') || '3')
-    if (rounds < 1 || rounds > 20) { alert(t('must_1_20')); return }
-    const list = []; let order = 1
-    for (let r = 1; r <= rounds; r++) for (let i = 0; i < teams.length; i++) for (let j = i + 1; j < teams.length; j++)
-      list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++, round: r })
-    await supabase.from('matches').insert(list); loadAll()
-  }
-
-  async function addRound() {
-    const maxRound = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.round || 1))
-    const newRound = maxRound + 1
-    const maxOrder = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.match_order))
-    let order = maxOrder + 1; const list = []
-    for (let i = 0; i < teams.length; i++) for (let j = i + 1; j < teams.length; j++)
-      list.push({ session_id: id, team_a_id: teams[i].id, team_b_id: teams[j].id, match_order: order++, round: newRound })
-    await supabase.from('matches').insert(list); loadAll()
-  }
-
-  async function addMatchToRound(roundNum) {
-    if (teams.length < 2) { alert(t('need_2_teams')); return }
-    const labelList = teams.map(t => t.label).join(', ')
-    const aLabel = prompt(`${t('first_team_label')} (${labelList})`)
-    if (!aLabel) return
-    const bLabel = prompt(`${t('second_team_label')} (${labelList})`)
-    if (!bLabel) return
-    const a = teams.find(tt => tt.label.toLowerCase() === aLabel.trim().toLowerCase())
-    const b = teams.find(tt => tt.label.toLowerCase() === bLabel.trim().toLowerCase())
-    if (!a || !b) { alert(t('label_not_found')); return }
-    if (a.id === b.id) { alert(t('different_teams')); return }
-    const maxOrder = matches.length === 0 ? 0 : Math.max(...matches.map(m => m.match_order))
-    await supabase.from('matches').insert({ session_id: id, team_a_id: a.id, team_b_id: b.id, match_order: maxOrder + 1, round: roundNum })
-    loadAll()
-  }
-
-  async function deleteRound(roundNum) {
-    if (!confirm(`${t('confirm_delete_round')} ${roundNum}?`)) return
-    await supabase.from('matches').delete().eq('session_id', id).eq('round', roundNum); loadAll()
-  }
-
-  async function deleteMatch(matchId) {
-    if (!confirm(t('confirm_delete_match'))) return
-    await supabase.from('matches').delete().eq('id', matchId); loadAll()
-  }
-
-  async function addGoal(matchId, teamId, playerId = null) {
+  async function addGoal(matchId, teamId) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
     const isA = match.team_a_id === teamId
     const tempGoalId = `temp-${Date.now()}-${Math.random()}`
-    const scorerPlayer = playerId ? allPlayers.find(p => p.id === playerId) : null
-
-    setGoals(prev => [...prev, {
-      id: tempGoalId, match_id: matchId, team_id: teamId, player_id: playerId || null,
-      assist_player_id: null,
-      players: scorerPlayer ? { name: scorerPlayer.name } : null,
-      assist_player: null,
-    }])
+    setGoals(prev => [...prev, { id: tempGoalId, match_id: matchId, team_id: teamId, player_id: null, assist_player_id: null, players: null, assist_player: null }])
     setMatches(prev => prev.map(m => m.id === matchId ? {
       ...m,
       score_a: isA ? m.score_a + 1 : m.score_a,
       score_b: !isA ? m.score_b + 1 : m.score_b,
       played: true,
     } : m))
-
     try {
-      const { data: insertedGoal, error: gErr } = await supabase
-        .from('goals')
-        .insert({ match_id: matchId, team_id: teamId, player_id: playerId || null })
-        .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
-        .single()
+      const { data: insertedGoal, error: gErr } = await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: null })
+        .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)').single()
       if (gErr) throw gErr
       await supabase.from('matches').update({
         score_a: isA ? match.score_a + 1 : match.score_a,
@@ -474,20 +411,12 @@ function SessionPage() {
       const choice = confirm(`${t('replace_existing_goals')} ${existingGoals.length} ${t('recorded_goals_warn')} (${newA}-${newB})${t('cancel_keep')}`)
       if (!choice) return
     }
-
     const tempPrefix = `temp-final-${Date.now()}`
     const newGoalRows = []
-    for (let i = 0; i < newA; i++) newGoalRows.push({
-      id: `${tempPrefix}-a-${i}`, match_id: matchId, team_id: match.team_a_id, player_id: null,
-      assist_player_id: null, players: null, assist_player: null,
-    })
-    for (let i = 0; i < newB; i++) newGoalRows.push({
-      id: `${tempPrefix}-b-${i}`, match_id: matchId, team_id: match.team_b_id, player_id: null,
-      assist_player_id: null, players: null, assist_player: null,
-    })
+    for (let i = 0; i < newA; i++) newGoalRows.push({ id: `${tempPrefix}-a-${i}`, match_id: matchId, team_id: match.team_a_id, player_id: null, assist_player_id: null, players: null, assist_player: null })
+    for (let i = 0; i < newB; i++) newGoalRows.push({ id: `${tempPrefix}-b-${i}`, match_id: matchId, team_id: match.team_b_id, player_id: null, assist_player_id: null, players: null, assist_player: null })
     setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...newGoalRows])
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: newA + newB > 0 } : m))
-
     try {
       if (existingGoals.length > 0) await supabase.from('goals').delete().eq('match_id', matchId)
       const inserts = []
@@ -502,31 +431,95 @@ function SessionPage() {
     } catch (e) { loadAll() }
   }
 
-  async function deleteGoal(goalId) {
-    if (!confirm(t('confirm_delete_goal'))) return
-    const goal = goals.find(g => g.id === goalId)
-    if (!goal) return
-    const match = matches.find(m => m.id === goal.match_id)
-    const isA = match && match.team_a_id === goal.team_id
+  // ====== NEW MATCH FLOW ======
+  // Start: pick first 2 teams → create match 1
+  async function startFirstMatch() {
+    if (!pickA || !pickB) { alert(t('select_two_teams')); return }
+    if (pickA === pickB) { alert(t('select_two_teams')); return }
+    const { data, error } = await supabase.from('matches').insert({
+      session_id: id, team_a_id: pickA, team_b_id: pickB, match_order: 1, round: 1, score_a: 0, score_b: 0, played: false,
+    }).select().single()
+    if (error) { alert(error.message); return }
+    setMatches(prev => [...prev, data])
+    setExpandedMatchId(data.id)
+    setPickA(''); setPickB('')
+  }
 
-    setGoals(prev => prev.filter(g => g.id !== goalId))
-    if (match) {
-      setMatches(prev => prev.map(m => m.id === match.id ? {
-        ...m,
-        score_a: isA ? Math.max(0, m.score_a - 1) : m.score_a,
-        score_b: !isA ? Math.max(0, m.score_b - 1) : m.score_b,
-      } : m))
+  // Confirm score for current match → generate next match using rotation rules
+  async function confirmAndAdvance(matchId) {
+    const match = matches.find(m => m.id === matchId)
+    if (!match) return
+    // Save final score (we already track via +1, so just mark played + collapse)
+    await supabase.from('matches').update({ played: true }).eq('id', matchId)
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, played: true } : m))
+
+    // Find ordered list of played matches
+    const allMatches = [...matches.filter(m => m.id !== matchId), { ...match, played: true }].sort((a,b) => a.match_order - b.match_order)
+    const lastMatch = allMatches[allMatches.length - 1]
+
+    let nextA, nextB
+    if (allMatches.length === 1) {
+      // After match 1: winner stays, rested team comes in
+      const winnerId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_a_id
+                     : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_b_id
+                     : lastMatch.team_a_id // draw → team A stays
+      const restingTeam = teams.find(tt => tt.id !== lastMatch.team_a_id && tt.id !== lastMatch.team_b_id)
+      if (!restingTeam) { setExpandedMatchId(null); return } // only 2 teams: no rotation possible, just stop
+      nextA = winnerId
+      nextB = restingTeam.id
+    } else {
+      // After match 2+: rotation = loser of previous match sits out, rested team comes in
+      const prev2 = allMatches[allMatches.length - 2]
+      const restingFromPrev = teams.find(tt => tt.id !== prev2.team_a_id && tt.id !== prev2.team_b_id) // who was resting in prev match
+      const loserId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_b_id
+                    : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_a_id
+                    : lastMatch.team_b_id // draw → team B sits out
+      const stayerId = loserId === lastMatch.team_a_id ? lastMatch.team_b_id : lastMatch.team_a_id
+
+      if (teams.length === 3 && restingFromPrev) {
+        nextA = stayerId
+        nextB = restingFromPrev.id
+      } else if (teams.length > 3) {
+        // For 4+ teams, rotate among non-current teams
+        const playingNow = new Set([lastMatch.team_a_id, lastMatch.team_b_id])
+        const candidates = teams.filter(tt => !playingNow.has(tt.id))
+        // Pick the team that has rested the longest (smallest count of recent appearances)
+        const recentApp = {}
+        teams.forEach(tt => recentApp[tt.id] = 0)
+        allMatches.slice(-Math.min(3, allMatches.length)).forEach(m => {
+          recentApp[m.team_a_id]++; recentApp[m.team_b_id]++
+        })
+        candidates.sort((x,y) => recentApp[x.id] - recentApp[y.id])
+        nextA = stayerId
+        nextB = candidates[0]?.id
+      }
     }
 
-    try {
-      if (!String(goalId).startsWith('temp-')) await supabase.from('goals').delete().eq('id', goalId)
-      if (match) {
-        await supabase.from('matches').update({
-          score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
-          score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
-        }).eq('id', goal.match_id)
-      }
-    } catch (e) { loadAll() }
+    if (!nextA || !nextB) { setExpandedMatchId(null); return }
+
+    const nextOrder = (lastMatch.match_order || 0) + 1
+    const { data: newMatch, error } = await supabase.from('matches').insert({
+      session_id: id, team_a_id: nextA, team_b_id: nextB, match_order: nextOrder, round: 1, score_a: 0, score_b: 0, played: false,
+    }).select().single()
+    if (error) { alert(error.message); return }
+    setMatches(prev => [...prev, newMatch])
+    setExpandedMatchId(newMatch.id)
+  }
+
+  async function deleteMatch(matchId) {
+    if (!confirm(t('confirm_delete_match'))) return
+    await supabase.from('matches').delete().eq('id', matchId); loadAll()
+  }
+
+  async function submitSession() {
+    if (!confirm(t('confirm_submit_session'))) return
+    await supabase.from('sessions').update({ submitted: true }).eq('id', id)
+    setSession(prev => ({ ...prev, submitted: true }))
+  }
+  async function reopenSession() {
+    if (!confirm(t('confirm_reopen_session'))) return
+    await supabase.from('sessions').update({ submitted: false }).eq('id', id)
+    setSession(prev => ({ ...prev, submitted: false }))
   }
 
   async function renameTeam(teamId, currentLabel) {
@@ -579,9 +572,7 @@ function SessionPage() {
     <div className="flex items-center justify-between text-sm border-b dark:border-gray-800 last:border-b-0 py-2">
       <span className="flex-1">
         {player.name}
-        {currentTeamId && (
-          <span className="text-fulda dark:text-emerald-400 font-bold ml-1">→ {teams.find(tt=>tt.id===currentTeamId)?.label || ''}</span>
-        )}
+        {currentTeamId && (<span className="text-fulda dark:text-emerald-400 font-bold ml-1">→ {teams.find(tt=>tt.id===currentTeamId)?.label || ''}</span>)}
       </span>
       <div className="flex gap-1 flex-wrap justify-end items-center">
         {teams.map(tt => (
@@ -601,6 +592,12 @@ function SessionPage() {
     { key: 'matches',   icon: '⚽', label: t('matches') },
   ]
 
+  const sortedMatches = [...matches].sort((a,b) => a.match_order - b.match_order)
+  const lastMatch = sortedMatches[sortedMatches.length - 1]
+  const lastIsFinished = lastMatch?.played
+  // The "current" match is the last one if not yet played, else nothing (waiting for confirm to make next)
+  const currentMatchId = lastMatch && !lastMatch.played ? lastMatch.id : null
+
   return (
     <div className="space-y-5 pb-20">
       <div className="flex justify-between items-start">
@@ -608,6 +605,7 @@ function SessionPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold">{session.name || session.date}</h1>
             {live && <LiveBadge />}
+            {session.submitted && <span className="bg-gray-700 text-white text-xs px-2 py-1 rounded-full font-semibold">{t('session_submitted')}</span>}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{session.date} · {session.num_teams} {t('teams').toLowerCase()}</p>
         </div>
@@ -639,10 +637,7 @@ function SessionPage() {
               <h2 className="font-bold mb-3">{t('top_scorers_session')}</h2>
               <ol className="space-y-1.5 text-sm">
                 {topScorers.map(([name, n], i) => (
-                  <li key={name} className="flex justify-between">
-                    <span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {name}</span>
-                    <span className="font-bold text-fulda dark:text-emerald-400">{n}</span>
-                  </li>
+                  <li key={name} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {name}</span><span className="font-bold text-fulda dark:text-emerald-400">{n}</span></li>
                 ))}
               </ol>
             </section>
@@ -695,7 +690,6 @@ function SessionPage() {
                 <span className="bg-fulda/10 dark:bg-emerald-900/40 text-fulda dark:text-emerald-300 px-2 py-1 rounded-full font-semibold">{assignedCount} {t('assigned')}</span>
                 <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-semibold">{unassignedCount} {t('not_assigned')}</span>
               </div>
-
               {assignedCount > 0 && (
                 <div>
                   <h3 className="font-semibold text-sm mb-2 text-gray-700 dark:text-gray-300">{t('assigned_section')}</h3>
@@ -713,7 +707,6 @@ function SessionPage() {
                   </div>
                 </div>
               )}
-
               <div>
                 <h3 className="font-semibold text-sm mb-2 text-gray-700 dark:text-gray-300">{t('unassigned_section')} ({unassignedCount})</h3>
                 {unassignedCount === 0 ? (
@@ -731,65 +724,103 @@ function SessionPage() {
 
       {activeTab === 'matches' && (
         <section className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="font-bold">{t('matches')}</h2>
-            {isAdmin && matches.length === 0 && <button onClick={generateMatches} className="bg-fulda text-white px-3 py-1.5 rounded-lg text-sm font-semibold">{t('generate_matches')}</button>}
-          </div>
-          {matches.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">{t('no_matches')}</p>}
+          <h2 className="font-bold mb-3">{t('matches')}</h2>
 
-          {(() => {
-            const rounds = [...new Set(matches.map(m => m.round || 1))].sort((a,b) => a-b)
-            return rounds.map(roundNum => {
-              const roundMatches = matches.filter(m => (m.round || 1) === roundNum)
-              return (
-                <div key={roundNum} className="mb-5">
-                  <div className="flex justify-between items-center bg-fulda dark:bg-emerald-800 text-white px-3 py-2 rounded-t-lg">
-                    <h3 className="font-bold">🏆 Round {roundNum}</h3>
-                    {isAdmin && <button onClick={() => deleteRound(roundNum)} className="text-xs bg-white text-fulda px-2 py-1 rounded font-semibold">{t('delete_round')}</button>}
-                  </div>
-                  <div className="border border-t-0 dark:border-gray-800 rounded-b-lg p-3 space-y-3 bg-gray-50 dark:bg-gray-800">
-                    {roundMatches.map(m => {
-                      const a = teams.find(tt => tt.id === m.team_a_id)
-                      const b = teams.find(tt => tt.id === m.team_b_id)
-                      return (
-                        <div key={m.id} className="border dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-900">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="font-semibold text-sm">Match {m.match_order}: Team {a?.label} vs Team {b?.label}</div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-xl font-bold tabular-nums">{m.score_a} - {m.score_b}</div>
-                              {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
-                            </div>
-                          </div>
+          {/* If no matches yet AND admin AND has 2+ teams → show first match picker */}
+          {matches.length === 0 && isAdmin && teams.length >= 2 && !session.submitted && (
+            <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+              <h3 className="font-semibold mb-3">{t('pick_first_match')}</h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <select value={pickA} onChange={e => setPickA(e.target.value)} className="border dark:border-gray-700 rounded-lg px-2 py-2 text-sm bg-white dark:bg-gray-900">
+                  <option value="">— Team A —</option>
+                  {teams.map(tt => <option key={tt.id} value={tt.id}>Team {tt.label}</option>)}
+                </select>
+                <select value={pickB} onChange={e => setPickB(e.target.value)} className="border dark:border-gray-700 rounded-lg px-2 py-2 text-sm bg-white dark:bg-gray-900">
+                  <option value="">— Team B —</option>
+                  {teams.map(tt => <option key={tt.id} value={tt.id}>Team {tt.label}</option>)}
+                </select>
+              </div>
+              <button onClick={startFirstMatch} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">
+                {t('start_session_matches')}
+              </button>
+            </div>
+          )}
 
-                          {isAdmin && (
-                            <div className="grid grid-cols-2 gap-3">
-                              <button onClick={() => addGoal(m.id, m.team_a_id, null)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
-                              <button onClick={() => addGoal(m.id, m.team_b_id, null)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
-                            </div>
-                          )}
+          {matches.length === 0 && teams.length < 2 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('not_enough_teams')}</p>
+          )}
 
-                          {isAdmin && (
-                            <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">
-                              {t('set_final_score')}
-                            </button>
-                          )}
-                        </div>
-                      )
-                    })}
+          {/* Match list: collapsed for finished, expanded for current */}
+          {sortedMatches.length > 0 && (
+            <div className="space-y-2 mt-2">
+              {sortedMatches.map(m => {
+                const a = teams.find(tt => tt.id === m.team_a_id)
+                const b = teams.find(tt => tt.id === m.team_b_id)
+                const isCurrent = m.id === currentMatchId
+                const isExpanded = isCurrent || expandedMatchId === m.id
+
+                // Collapsed view (finished match, not expanded)
+                if (!isExpanded) {
+                  return (
+                    <button key={m.id} onClick={() => setExpandedMatchId(m.id)}
+                      className="w-full flex justify-between items-center bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                      <span className="text-gray-600 dark:text-gray-300">
+                        <span className="text-green-600 dark:text-emerald-400 mr-1">✓</span>
+                        Match {m.match_order}: Team {a?.label} vs Team {b?.label}
+                      </span>
+                      <span className="font-bold tabular-nums">{m.score_a}–{m.score_b}</span>
+                    </button>
+                  )
+                }
+
+                // Expanded view
+                return (
+                  <div key={m.id} className={`border rounded-lg p-3 ${isCurrent ? 'border-fulda bg-white dark:bg-gray-900 shadow-md' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="font-semibold text-sm">
+                        {isCurrent && <span className="text-fulda dark:text-emerald-400 mr-1">▶</span>}
+                        Match {m.match_order}: Team {a?.label} vs Team {b?.label}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-2xl font-bold tabular-nums">{m.score_a} - {m.score_b}</div>
+                        {isAdmin && !isCurrent && <button onClick={() => setExpandedMatchId(null)} className="text-gray-400 text-xs">▲</button>}
+                        {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
+                      </div>
+                    </div>
+
                     {isAdmin && (
-                      <button onClick={() => addMatchToRound(roundNum)} className="w-full text-xs border border-dashed border-fulda text-fulda dark:text-emerald-400 py-2 rounded-lg hover:bg-fulda hover:text-white font-semibold">
-                        {t('add_match_round')} {roundNum}
+                      <div className="grid grid-cols-2 gap-3">
+                        <button onClick={() => addGoal(m.id, m.team_a_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
+                        <button onClick={() => addGoal(m.id, m.team_b_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
+                      </div>
+                    )}
+
+                    {isAdmin && (
+                      <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">
+                        {t('set_final_score')}
+                      </button>
+                    )}
+
+                    {isAdmin && isCurrent && !session.submitted && (
+                      <button onClick={() => confirmAndAdvance(m.id)} className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">
+                        ✓ {t('submit_score')} → {t('next_match')}
                       </button>
                     )}
                   </div>
-                </div>
-              )
-            })
-          })()}
+                )
+              })}
+            </div>
+          )}
 
-          {isAdmin && matches.length > 0 && (
-            <button onClick={addRound} className="w-full mt-3 border-2 border-dashed border-fulda text-fulda dark:text-emerald-400 font-semibold py-2.5 rounded-lg hover:bg-fulda hover:text-white">
-              {t('add_round')}
+          {/* Submit / Reopen session */}
+          {isAdmin && matches.length > 0 && !session.submitted && (
+            <button onClick={submitSession} className="w-full mt-4 border-2 border-dashed border-fulda text-fulda dark:text-emerald-400 font-bold py-3 rounded-lg hover:bg-fulda hover:text-white">
+              {t('submit_session')}
+            </button>
+          )}
+          {isAdmin && session.submitted && (
+            <button onClick={reopenSession} className="w-full mt-4 bg-gray-700 text-white py-2.5 rounded-lg font-semibold">
+              {t('reopen_session')}
             </button>
           )}
         </section>
@@ -814,7 +845,6 @@ function PlayersPage() {
   const { t } = useT()
   const [players, setPlayers] = useState([])
   const [name, setName] = useState('')
-
   useEffect(() => { load() }, [])
   async function load() {
     const { data } = await supabase.from('players').select('*').order('name')
@@ -831,7 +861,6 @@ function PlayersPage() {
     if (!confirm(t('confirm_delete_player'))) return
     await supabase.from('players').delete().eq('id', id); load()
   }
-
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">{t('players')} <span className="text-gray-400 font-normal">({players.length})</span></h1>
@@ -863,7 +892,6 @@ function PlayerProfilePage() {
   const [appearances, setAppearances] = useState(0)
   const [goalsCount, setGoalsCount] = useState(0)
   const [loading, setLoading] = useState(true)
-
   useEffect(() => { load() }, [id])
   async function load() {
     setLoading(true)
@@ -879,18 +907,14 @@ function PlayerProfilePage() {
   async function rename() {
     const newName = prompt(t('rename_player'), player.name)
     if (!newName || newName.trim() === '' || newName.trim() === player.name) return
-    await supabase.from('players').update({ name: newName.trim() }).eq('id', id)
-    load()
+    await supabase.from('players').update({ name: newName.trim() }).eq('id', id); load()
   }
   async function del() {
     if (!confirm(t('confirm_delete_player'))) return
-    await supabase.from('players').delete().eq('id', id)
-    navigate('/players')
+    await supabase.from('players').delete().eq('id', id); navigate('/players')
   }
-
   if (loading) return <p>{t('loading')}</p>
   if (!player) return <p>{t('player_not_found')}</p>
-
   return (
     <div className="space-y-4">
       <Link to="/players" className="text-sm text-gray-500 dark:text-gray-400">{t('back_to_players')}</Link>
@@ -928,9 +952,7 @@ function VotePage() {
   const [submitted, setSubmitted] = useState(false)
   const [results, setResults] = useState({})
   const fingerprint = getFingerprint()
-
   useEffect(() => { load() }, [sessionId])
-
   async function load() {
     const { data: s } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
     setSession(s)
@@ -961,12 +983,9 @@ function VotePage() {
     if (error) { alert(error.message); return }
     setSubmitted(true); loadResults()
   }
-
   if (!session) return <p>{t('loading')}</p>
   if (!session.voting_open) return <p>{t('voting_not_open_session')}</p>
-
   const byCat = (cat) => Object.values(results).filter(r => r.category === cat).sort((a,b) => b.count - a.count)
-
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">{t('vote')} — {session.name || session.date}</h1>
@@ -978,7 +997,6 @@ function VotePage() {
           <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">{t('submit_vote')}</button>
         </div>
       ) : <p className="text-fulda dark:text-emerald-400 font-semibold">{t('thanks_voting')}</p>}
-
       <div className="space-y-3">
         {[['best_player', t('best_player')], ['best_goalkeeper', t('best_keeper')], ['best_goal', t('best_goal')]].map(([cat,label]) => {
           const list = byCat(cat)
@@ -986,8 +1004,7 @@ function VotePage() {
             <div key={cat} className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
               <h3 className="font-bold mb-2">{label}</h3>
               {list.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">{t('no_votes')}</p> :
-                <ol className="space-y-1 text-sm">{list.map((r, i) => <li key={r.name} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {r.name}</span><span className="font-bold text-fulda dark:text-emerald-400">{r.count}</span></li>)}</ol>
-              }
+                <ol className="space-y-1 text-sm">{list.map((r, i) => <li key={r.name} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {r.name}</span><span className="font-bold text-fulda dark:text-emerald-400">{r.count}</span></li>)}</ol>}
             </div>
           )
         })}
@@ -1024,7 +1041,6 @@ function LeaderboardPage() {
   const [bestKeepers, setBestKeepers] = useState([])
   const [goalsBySession, setGoalsBySession] = useState([])
   const [loading, setLoading] = useState(true)
-
   useEffect(() => { load() }, [])
   async function load() {
     setLoading(true)
@@ -1032,27 +1048,20 @@ function LeaderboardPage() {
     const sm = {}
     ;(g || []).forEach(x => { if (x.player_id && x.players?.name) sm[x.players.name] = (sm[x.players.name] || 0) + 1 })
     setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
-
     const { data: vp } = await supabase.from('votes').select('players(name), category').eq('category','best_player')
     const pm = {}; (vp || []).forEach(x => { if (x.players) pm[x.players.name] = (pm[x.players.name] || 0) + 1 })
     setBestPlayers(Object.entries(pm).sort((a,b) => b[1] - a[1]))
-
     const { data: vk } = await supabase.from('votes').select('players(name), category').eq('category','best_goalkeeper')
     const km = {}; (vk || []).forEach(x => { if (x.players) km[x.players.name] = (km[x.players.name] || 0) + 1 })
     setBestKeepers(Object.entries(km).sort((a,b) => b[1] - a[1]))
-
     const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
     const goalCountBySessionId = {}
-    ;(allGoals || []).forEach(x => {
-      const sid = x.matches?.session_id
-      if (sid) goalCountBySessionId[sid] = (goalCountBySessionId[sid] || 0) + 1
-    })
+    ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) goalCountBySessionId[sid] = (goalCountBySessionId[sid] || 0) + 1 })
     const chartData = (sessionsData || []).map(s => ({ label: s.date, goals: goalCountBySessionId[s.id] || 0 }))
     setGoalsBySession(chartData)
     setLoading(false)
   }
-
   const Section = ({ title, list }) => (
     <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
       <h3 className="font-bold mb-3">{title}</h3>
@@ -1060,15 +1069,11 @@ function LeaderboardPage() {
         <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => <li key={n} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span><span className="font-bold text-fulda dark:text-emerald-400">{c}</span></li>)}</ol>}
     </div>
   )
-
   if (loading) return <p>{t('loading')}</p>
-
   const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280'
-
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('season_lb')}</h1>
-
       {goalsBySession.length > 0 && (
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold mb-3">{t('goals_per_session')}</h3>
@@ -1085,7 +1090,6 @@ function LeaderboardPage() {
           </div>
         </div>
       )}
-
       <Section title={t('top_scorers_all')} list={scorers} />
       <Section title={t('most_best_player')} list={bestPlayers} />
       <Section title={t('most_best_keeper')} list={bestKeepers} />
@@ -1100,7 +1104,6 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-
   async function login() {
     setError(''); setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -1108,11 +1111,7 @@ function LoginPage() {
     if (error) { setError(error.message); return }
     navigate('/')
   }
-
-  async function logout() {
-    await supabase.auth.signOut(); window.location.reload()
-  }
-
+  async function logout() { await supabase.auth.signOut(); window.location.reload() }
   return (
     <div className="max-w-sm mx-auto bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-6 shadow-sm">
       <h1 className="text-xl font-bold mb-4">{t('admin_login')}</h1>
