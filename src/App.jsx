@@ -436,35 +436,39 @@ function SessionPage() {
     let nextA, nextB
 
     if (allMatches.length === 1) {
+      // After match 1: winner stays for match 2, resting team comes in.
       const winnerId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_a_id
                      : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_b_id
-                     : lastMatch.team_a_id
+                     : lastMatch.team_a_id // draw → team A stays
       const restingTeam = teams.find(tt => tt.id !== lastMatch.team_a_id && tt.id !== lastMatch.team_b_id)
       if (!restingTeam) {
         await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
         setSession(prev => ({ ...prev, current_match_id: null })); return
       }
-      nextA = winnerId; nextB = restingTeam.id
+      nextA = winnerId
+      nextB = restingTeam.id
     } else {
+      // After match 2+: each team plays 2 in a row, then rests 1.
+      // Rule: the team that played in BOTH of the last 2 matches must REST.
+      // The other team in the last match plays their 2nd consecutive.
+      // The team that was resting last match comes in.
       const prev2 = allMatches[allMatches.length - 2]
-      const restingFromPrev = teams.find(tt => tt.id !== prev2.team_a_id && tt.id !== prev2.team_b_id)
-      const loserId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_b_id
-                    : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_a_id
-                    : lastMatch.team_b_id
-      const stayerId = loserId === lastMatch.team_a_id ? lastMatch.team_b_id : lastMatch.team_a_id
-      if (teams.length === 3 && restingFromPrev) {
-        nextA = stayerId; nextB = restingFromPrev.id
-      } else if (teams.length > 3) {
-        const playingNow = new Set([lastMatch.team_a_id, lastMatch.team_b_id])
-        const candidates = teams.filter(tt => !playingNow.has(tt.id))
-        const recentApp = {}
-        teams.forEach(tt => recentApp[tt.id] = 0)
-        allMatches.slice(-Math.min(3, allMatches.length)).forEach(m => {
-          recentApp[m.team_a_id]++; recentApp[m.team_b_id]++
-        })
-        candidates.sort((x,y) => recentApp[x.id] - recentApp[y.id])
-        nextA = stayerId; nextB = candidates[0]?.id
+      const lastTeams = new Set([lastMatch.team_a_id, lastMatch.team_b_id])
+      const prevTeams = new Set([prev2.team_a_id, prev2.team_b_id])
+
+      // Team that played BOTH last 2 matches → must rest now
+      const mustRestId = [...lastTeams].find(tid => prevTeams.has(tid))
+      // Team that played only the last match → stays for their 2nd consecutive
+      const staysId = [...lastTeams].find(tid => !prevTeams.has(tid))
+      // Team that was resting last match → comes in now
+      const comesInTeam = teams.find(tt => !lastTeams.has(tt.id))
+
+      if (!mustRestId || !staysId || !comesInTeam) {
+        await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
+        setSession(prev => ({ ...prev, current_match_id: null })); return
       }
+      nextA = staysId
+      nextB = comesInTeam.id
     }
 
     if (!nextA || !nextB) {
