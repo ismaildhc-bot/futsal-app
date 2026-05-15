@@ -71,11 +71,14 @@ const translations = {
     next_match: 'Next match',
     submit_session: '🏁 Submit session',
     session_submitted: '✅ Session submitted',
-    confirm_submit_session: 'Submit the session? You can still edit past matches afterwards.',
-    confirm_reopen_session: 'Reopen the session to add more matches?',
+    confirm_submit_session: 'Submit the session? Matches become read-only. You can reopen anytime to edit.',
+    confirm_reopen_session: 'Reopen the session to edit matches?',
     reopen_session: 'Reopen session',
     not_enough_teams: 'Need at least 2 teams in this session.',
     select_two_teams: 'Select two different teams to start.',
+    change_teams: 'Change teams',
+    change_teams_warn: 'Changing teams will RESET this match\'s score to 0-0 and delete all goals in this match.\n\nContinue?',
+    locked: 'Locked',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
@@ -142,11 +145,14 @@ const translations = {
     next_match: 'Nächstes Spiel',
     submit_session: '🏁 Termin abschließen',
     session_submitted: '✅ Termin abgeschlossen',
-    confirm_submit_session: 'Termin abschließen? Vergangene Spiele bleiben bearbeitbar.',
-    confirm_reopen_session: 'Termin wieder öffnen, um weitere Spiele hinzuzufügen?',
+    confirm_submit_session: 'Termin abschließen? Spiele werden schreibgeschützt. Du kannst jederzeit wieder öffnen.',
+    confirm_reopen_session: 'Termin zum Bearbeiten wieder öffnen?',
     reopen_session: 'Termin wieder öffnen',
     not_enough_teams: 'Mindestens 2 Teams im Termin nötig.',
     select_two_teams: 'Zwei verschiedene Teams auswählen.',
+    change_teams: 'Teams ändern',
+    change_teams_warn: 'Teams ändern setzt das Ergebnis auf 0-0 zurück und löscht alle Tore dieses Spiels.\n\nFortfahren?',
+    locked: 'Gesperrt',
   },
 }
 
@@ -183,8 +189,7 @@ function LiveBadge() {
   const { t } = useT()
   return (
     <span className="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-      {t('live')}
+      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>{t('live')}
     </span>
   )
 }
@@ -318,6 +323,7 @@ function SessionPage() {
   const { id } = useParams()
   const { isAdmin } = useAuth()
   const { t } = useT()
+  const navigate = useNavigate()
   const [session, setSession] = useState(null)
   const [teams, setTeams] = useState([])
   const [allPlayers, setAllPlayers] = useState([])
@@ -329,6 +335,9 @@ function SessionPage() {
   const [expandedMatchId, setExpandedMatchId] = useState(null)
   const [pickA, setPickA] = useState('')
   const [pickB, setPickB] = useState('')
+  const [editingTeamsForMatch, setEditingTeamsForMatch] = useState(null) // match.id whose team-edit dropdowns are open
+  const [editTeamA, setEditTeamA] = useState('')
+  const [editTeamB, setEditTeamB] = useState('')
 
   useEffect(() => { loadAll() }, [id])
 
@@ -396,12 +405,8 @@ function SessionPage() {
       const choice = confirm(`${t('replace_existing_goals')} ${existingGoals.length} ${t('recorded_goals_warn')} (${newA}-${newB})${t('cancel_keep')}`)
       if (!choice) return
     }
-    const tempPrefix = `temp-final-${Date.now()}`
-    const newGoalRows = []
-    for (let i = 0; i < newA; i++) newGoalRows.push({ id: `${tempPrefix}-a-${i}`, match_id: matchId, team_id: match.team_a_id, player_id: null, assist_player_id: null, players: null, assist_player: null })
-    for (let i = 0; i < newB; i++) newGoalRows.push({ id: `${tempPrefix}-b-${i}`, match_id: matchId, team_id: match.team_b_id, player_id: null, assist_player_id: null, players: null, assist_player: null })
-    setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...newGoalRows])
-    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: newA + newB > 0 } : m))
+    setGoals(prev => prev.filter(g => g.match_id !== matchId))
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: true } : m))
     try {
       if (existingGoals.length > 0) await supabase.from('goals').delete().eq('match_id', matchId)
       const inserts = []
@@ -411,7 +416,7 @@ function SessionPage() {
         const { data: inserted } = await supabase.from('goals').insert(inserts).select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
         if (inserted) setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...inserted])
       }
-      await supabase.from('matches').update({ score_a: newA, score_b: newB, played: newA + newB > 0 }).eq('id', matchId)
+      await supabase.from('matches').update({ score_a: newA, score_b: newB, played: true }).eq('id', matchId)
     } catch (e) { loadAll() }
   }
 
@@ -431,44 +436,36 @@ function SessionPage() {
   async function confirmAndAdvance(matchId) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
+    // Force this match to be "played" even if score is 0-0, so it counts in standings.
+    if (!match.played) {
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, played: true } : m))
+      await supabase.from('matches').update({ played: true }).eq('id', matchId)
+    }
     const allMatches = [...matches].sort((a,b) => a.match_order - b.match_order)
     const lastMatch = match
     let nextA, nextB
 
     if (allMatches.length === 1) {
-      // After match 1: winner stays for match 2, resting team comes in.
       const winnerId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_a_id
                      : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_b_id
-                     : lastMatch.team_a_id // draw → team A stays
+                     : lastMatch.team_a_id
       const restingTeam = teams.find(tt => tt.id !== lastMatch.team_a_id && tt.id !== lastMatch.team_b_id)
       if (!restingTeam) {
         await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
         setSession(prev => ({ ...prev, current_match_id: null })); return
       }
-      nextA = winnerId
-      nextB = restingTeam.id
+      nextA = winnerId; nextB = restingTeam.id
     } else {
-      // After match 2+: each team plays 2 in a row, then rests 1.
-      // Rule: the team that played in BOTH of the last 2 matches must REST.
-      // The other team in the last match plays their 2nd consecutive.
-      // The team that was resting last match comes in.
       const prev2 = allMatches[allMatches.length - 2]
       const lastTeams = new Set([lastMatch.team_a_id, lastMatch.team_b_id])
       const prevTeams = new Set([prev2.team_a_id, prev2.team_b_id])
-
-      // Team that played BOTH last 2 matches → must rest now
-      const mustRestId = [...lastTeams].find(tid => prevTeams.has(tid))
-      // Team that played only the last match → stays for their 2nd consecutive
       const staysId = [...lastTeams].find(tid => !prevTeams.has(tid))
-      // Team that was resting last match → comes in now
       const comesInTeam = teams.find(tt => !lastTeams.has(tt.id))
-
-      if (!mustRestId || !staysId || !comesInTeam) {
+      if (!staysId || !comesInTeam) {
         await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
         setSession(prev => ({ ...prev, current_match_id: null })); return
       }
-      nextA = staysId
-      nextB = comesInTeam.id
+      nextA = staysId; nextB = comesInTeam.id
     }
 
     if (!nextA || !nextB) {
@@ -487,43 +484,100 @@ function SessionPage() {
     setExpandedMatchId(null)
   }
 
+  // OPTIMISTIC delete match
   async function deleteMatch(matchId) {
     if (!confirm(t('confirm_delete_match'))) return
-    await supabase.from('matches').delete().eq('id', matchId); loadAll()
+    setMatches(prev => prev.filter(m => m.id !== matchId))
+    setGoals(prev => prev.filter(g => g.match_id !== matchId))
+    if (session.current_match_id === matchId) {
+      setSession(prev => ({ ...prev, current_match_id: null }))
+      await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
+    }
+    try { await supabase.from('matches').delete().eq('id', matchId) }
+    catch (e) { loadAll() }
+  }
+
+  // OPTIMISTIC delete goal (kept for legacy callers; not used in UI now since scorer dropdown is hidden)
+  async function deleteGoal(goalId) {
+    if (!confirm(t('confirm_delete_goal'))) return
+    const goal = goals.find(g => g.id === goalId)
+    if (!goal) return
+    const match = matches.find(m => m.id === goal.match_id)
+    const isA = match && match.team_a_id === goal.team_id
+    setGoals(prev => prev.filter(g => g.id !== goalId))
+    if (match) {
+      setMatches(prev => prev.map(m => m.id === match.id ? {
+        ...m,
+        score_a: isA ? Math.max(0, m.score_a - 1) : m.score_a,
+        score_b: !isA ? Math.max(0, m.score_b - 1) : m.score_b,
+      } : m))
+    }
+    try {
+      if (!String(goalId).startsWith('temp-')) await supabase.from('goals').delete().eq('id', goalId)
+      if (match) {
+        await supabase.from('matches').update({
+          score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
+          score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
+        }).eq('id', goal.match_id)
+      }
+    } catch (e) { loadAll() }
+  }
+
+  // Change teams in an existing match — resets score to 0-0 and deletes all goals in that match
+  async function changeMatchTeams(matchId) {
+    if (!editTeamA || !editTeamB) { alert(t('select_two_teams')); return }
+    if (editTeamA === editTeamB) { alert(t('select_two_teams')); return }
+    if (!confirm(t('change_teams_warn'))) return
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, team_a_id: editTeamA, team_b_id: editTeamB, score_a: 0, score_b: 0, played: false } : m))
+    setGoals(prev => prev.filter(g => g.match_id !== matchId))
+    setEditingTeamsForMatch(null); setEditTeamA(''); setEditTeamB('')
+    try {
+      await supabase.from('goals').delete().eq('match_id', matchId)
+      await supabase.from('matches').update({ team_a_id: editTeamA, team_b_id: editTeamB, score_a: 0, score_b: 0, played: false }).eq('id', matchId)
+    } catch (e) { loadAll() }
   }
 
   async function submitSession() {
     if (!confirm(t('confirm_submit_session'))) return
-    await supabase.from('sessions').update({ submitted: true, current_match_id: null }).eq('id', id)
     setSession(prev => ({ ...prev, submitted: true, current_match_id: null }))
+    try { await supabase.from('sessions').update({ submitted: true, current_match_id: null }).eq('id', id) }
+    catch (e) { loadAll() }
   }
   async function reopenSession() {
     if (!confirm(t('confirm_reopen_session'))) return
-    await supabase.from('sessions').update({ submitted: false }).eq('id', id)
     setSession(prev => ({ ...prev, submitted: false }))
+    try { await supabase.from('sessions').update({ submitted: false }).eq('id', id) }
+    catch (e) { loadAll() }
   }
 
   async function renameTeam(teamId, currentLabel) {
     const newLabel = prompt(t('rename_team'), currentLabel)
     if (!newLabel || newLabel.trim() === '' || newLabel.trim() === currentLabel) return
-    await supabase.from('teams').update({ label: newLabel.trim() }).eq('id', teamId); loadAll()
+    setTeams(prev => prev.map(tt => tt.id === teamId ? { ...tt, label: newLabel.trim() } : tt))
+    try { await supabase.from('teams').update({ label: newLabel.trim() }).eq('id', teamId) }
+    catch (e) { loadAll() }
   }
 
   async function toggleVoting() {
     const open = !session.voting_open
-    await supabase.from('sessions').update({ voting_open: open, voting_opened_at: open ? new Date().toISOString() : session.voting_opened_at }).eq('id', id)
-    loadAll()
+    setSession(prev => ({ ...prev, voting_open: open, voting_opened_at: open ? new Date().toISOString() : prev.voting_opened_at }))
+    try { await supabase.from('sessions').update({ voting_open: open, voting_opened_at: open ? new Date().toISOString() : session.voting_opened_at }).eq('id', id) }
+    catch (e) { loadAll() }
   }
 
+  // OPTIMISTIC delete session — navigate away first, then delete in background
   async function deleteSession() {
     if (!confirm(t('confirm_delete_session'))) return
-    await supabase.from('sessions').delete().eq('id', id); window.location.href = '/'
+    navigate('/')
+    try { await supabase.from('sessions').delete().eq('id', id) } catch (e) {}
   }
 
   if (loading) return <p>{t('loading')}</p>
   if (!session) return <p>{t('session_not_found')}</p>
 
   const live = isToday(session.date)
+  const editable = !session.submitted
+
   const teamStats = teams.map(tt => {
     let played = 0, wins = 0, draws = 0, losses = 0, gf = 0, ga = 0
     matches.forEach(m => {
@@ -688,9 +742,12 @@ function SessionPage() {
 
       {activeTab === 'matches' && (
         <section className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
-          <h2 className="font-bold mb-3">{t('matches')}</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold">{t('matches')}</h2>
+            {!editable && <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded-full font-semibold">🔒 {t('locked')}</span>}
+          </div>
 
-          {matches.length === 0 && isAdmin && teams.length >= 2 && !session.submitted && (
+          {matches.length === 0 && isAdmin && teams.length >= 2 && editable && (
             <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
               <h3 className="font-semibold mb-3">{t('pick_first_match')}</h3>
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -714,8 +771,9 @@ function SessionPage() {
               {sortedMatches.map(m => {
                 const a = teams.find(tt => tt.id === m.team_a_id)
                 const b = teams.find(tt => tt.id === m.team_b_id)
-                const isCurrent = m.id === currentMatchId
+                const isCurrent = editable && m.id === currentMatchId
                 const isExpanded = isCurrent || expandedMatchId === m.id
+                const isEditingTeams = editingTeamsForMatch === m.id
 
                 if (!isExpanded) {
                   return (
@@ -732,23 +790,48 @@ function SessionPage() {
                       <div className="font-semibold text-sm">{isCurrent && <span className="text-fulda dark:text-emerald-400 mr-1">▶</span>}Match {m.match_order}: Team {a?.label} vs Team {b?.label}</div>
                       <div className="flex items-center gap-2">
                         <div className="text-2xl font-bold tabular-nums">{m.score_a} - {m.score_b}</div>
-                        {isAdmin && !isCurrent && <button onClick={() => setExpandedMatchId(null)} className="text-gray-400 text-xs">▲</button>}
-                        {isAdmin && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
+                        {!isCurrent && <button onClick={() => setExpandedMatchId(null)} className="text-gray-400 text-xs">▲</button>}
+                        {isAdmin && editable && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
                       </div>
                     </div>
 
-                    {isAdmin && (
+                    {isAdmin && editable && (
                       <div className="grid grid-cols-2 gap-3">
                         <button onClick={() => addGoal(m.id, m.team_a_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
                         <button onClick={() => addGoal(m.id, m.team_b_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
                       </div>
                     )}
 
-                    {isAdmin && (
+                    {isAdmin && editable && (
                       <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">{t('set_final_score')}</button>
                     )}
 
-                    {isAdmin && isCurrent && !session.submitted && (
+                    {/* Change teams */}
+                    {isAdmin && editable && !isEditingTeams && (
+                      <button
+                        onClick={() => { setEditingTeamsForMatch(m.id); setEditTeamA(m.team_a_id); setEditTeamB(m.team_b_id) }}
+                        className="w-full mt-2 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">
+                        🔄 {t('change_teams')}
+                      </button>
+                    )}
+                    {isAdmin && editable && isEditingTeams && (
+                      <div className="mt-2 p-2 border border-fulda rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <select value={editTeamA} onChange={e => setEditTeamA(e.target.value)} className="border dark:border-gray-700 rounded px-2 py-1.5 text-sm bg-white dark:bg-gray-900">
+                            {teams.map(tt => <option key={tt.id} value={tt.id}>Team {tt.label}</option>)}
+                          </select>
+                          <select value={editTeamB} onChange={e => setEditTeamB(e.target.value)} className="border dark:border-gray-700 rounded px-2 py-1.5 text-sm bg-white dark:bg-gray-900">
+                            {teams.map(tt => <option key={tt.id} value={tt.id}>Team {tt.label}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => changeMatchTeams(m.id)} className="flex-1 bg-fulda text-white text-xs py-2 rounded-lg font-semibold">✓</button>
+                          <button onClick={() => { setEditingTeamsForMatch(null); setEditTeamA(''); setEditTeamB('') }} className="flex-1 bg-gray-300 dark:bg-gray-700 text-xs py-2 rounded-lg font-semibold">✕</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {isAdmin && isCurrent && editable && (
                       <button onClick={() => confirmAndAdvance(m.id)} className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">✓ {t('submit_score')} → {t('next_match')}</button>
                     )}
                   </div>
@@ -757,7 +840,7 @@ function SessionPage() {
             </div>
           )}
 
-          {isAdmin && matches.length > 0 && !session.submitted && (
+          {isAdmin && matches.length > 0 && editable && (
             <button onClick={submitSession} className="w-full mt-4 border-2 border-dashed border-fulda text-fulda dark:text-emerald-400 font-bold py-3 rounded-lg hover:bg-fulda hover:text-white">{t('submit_session')}</button>
           )}
           {isAdmin && session.submitted && (
@@ -787,8 +870,28 @@ function PlayersPage() {
   const [name, setName] = useState('')
   useEffect(() => { load() }, [])
   async function load() { const { data } = await supabase.from('players').select('*').order('name'); setPlayers(data || []) }
-  async function add() { if (!name.trim()) return; const { error } = await supabase.from('players').insert({ name: name.trim() }); if (error) alert(error.message); setName(''); load() }
-  async function del(e, id) { e.preventDefault(); e.stopPropagation(); if (!confirm(t('confirm_delete_player'))) return; await supabase.from('players').delete().eq('id', id); load() }
+  async function add() {
+    if (!name.trim()) return
+    const tempId = `temp-${Date.now()}`
+    const optimistic = { id: tempId, name: name.trim() }
+    setPlayers(prev => [...prev, optimistic].sort((a,b) => a.name.localeCompare(b.name)))
+    setName('')
+    try {
+      const { data, error } = await supabase.from('players').insert({ name: optimistic.name }).select().single()
+      if (error) throw error
+      setPlayers(prev => prev.map(p => p.id === tempId ? data : p).sort((a,b) => a.name.localeCompare(b.name)))
+    } catch (e) {
+      setPlayers(prev => prev.filter(p => p.id !== tempId))
+      alert(e.message || 'Error')
+    }
+  }
+  async function del(e, idToDelete) {
+    e.preventDefault(); e.stopPropagation()
+    if (!confirm(t('confirm_delete_player'))) return
+    setPlayers(prev => prev.filter(p => p.id !== idToDelete))
+    try { await supabase.from('players').delete().eq('id', idToDelete) }
+    catch (e) { load() }
+  }
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">{t('players')} <span className="text-gray-400 font-normal">({players.length})</span></h1>
@@ -835,11 +938,14 @@ function PlayerProfilePage() {
   async function rename() {
     const newName = prompt(t('rename_player'), player.name)
     if (!newName || newName.trim() === '' || newName.trim() === player.name) return
-    await supabase.from('players').update({ name: newName.trim() }).eq('id', id); load()
+    setPlayer(prev => ({ ...prev, name: newName.trim() }))
+    try { await supabase.from('players').update({ name: newName.trim() }).eq('id', id) }
+    catch (e) { load() }
   }
   async function del() {
     if (!confirm(t('confirm_delete_player'))) return
-    await supabase.from('players').delete().eq('id', id); navigate('/players')
+    navigate('/players')
+    try { await supabase.from('players').delete().eq('id', id) } catch (e) {}
   }
   if (loading) return <p>{t('loading')}</p>
   if (!player) return <p>{t('player_not_found')}</p>
