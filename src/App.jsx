@@ -299,7 +299,7 @@ function HomePage() {
       </div>
       {/* Copyright footer */}
       <div className="mt-8 pt-4 border-t dark:border-gray-800 text-center space-y-1">
-        <p className="text-xs text-gray-400 dark:text-gray-600">© Hochschule Fulda — Futsal Kurs</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600">© Hochschule Fulda — Futsal Kurs SS26</p>
         <p className="text-xs text-gray-400 dark:text-gray-600">{t('copyright_text')}</p>
         <p className="text-xs text-gray-400 dark:text-gray-600">{t('contact')}: <a href="mailto:ismail.elhathout@gmx.de" className="underline">ismail.elhathout@gmx.de</a></p>
       </div>
