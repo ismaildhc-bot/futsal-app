@@ -1,9 +1,11 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { supabase } from './supabase.js'
 
 const HS_LOGO = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
+const HS_LOGO_LEAF = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
+const APP_ICON = '/icon-512.png'
 
 const translations = {
   en: {
@@ -13,25 +15,21 @@ const translations = {
     no_sessions: 'No sessions yet.', live: 'LIVE', voting: 'VOTING',
     delete: 'Delete',
     top_scorers_session: '⭐ Top scorers (this session)',
-    top_scorers_all: '⚽ Top Scorers (all sessions)',
-    voting_label: '🗳 Voting',
-    voting_not_open: 'Voting not open yet.',
+    voting_label: '🗳 Voting', voting_not_open: 'Voting not open yet.',
     open_voting_page: 'Open voting page →',
-    open_voting: 'Open voting', close_voting: 'Close voting',
-    share: 'Share:',
+    open_voting: 'Open voting', close_voting: 'Close voting', share: 'Share:',
     assigned: 'assigned', not_assigned: 'not assigned',
-    assigned_section: '✅ Assigned',
-    unassigned_section: '⏳ Not assigned yet',
+    assigned_section: '✅ Assigned', unassigned_section: '⏳ Not assigned yet',
     everyone_assigned: 'Everyone is assigned to a team.',
-    rename_team: 'New team name:',
-    rename_player: 'New player name:',
-    no_players_team: 'No players yet',
-    remove: 'remove', no_data: 'No data yet.',
+    rename_team: 'New team name:', rename_player: 'New player name:',
+    no_players_team: 'No players yet', remove: 'remove', no_data: 'No data yet.',
     season_lb: 'Season Leaderboard',
-    most_best_player: '🏆 Most Best Player Awards',
-    most_best_keeper: '🧤 Most Best Goalkeeper Awards',
-    most_best_defender: '🛡 Most Best Defender Awards',
-    most_pepe: '🪓 Most Pepe Awards',
+    award_wins: 'Award Wins (all sessions)',
+    best_player_wins: '🏆 Best Player of the Session',
+    best_keeper_wins: '🧤 Best Goalkeeper of the Session',
+    best_defender_wins: '🛡 Best Defender of the Session',
+    best_goal_wins: '⚽ Best Goal of the Session',
+    pepe_wins: '🪓 Pepe Award of the Session',
     goals_per_session: '📈 Goals per session',
     add_player: 'Player name', add: 'Add', no_players: 'No players yet.',
     admin_login: 'Admin Login', email: 'Email', password: 'Password',
@@ -43,43 +41,31 @@ const translations = {
     pepe_hint: 'The most aggressive player today — too many bad contacts',
     choose_fav_goal: 'Choose who scored your favourite goal',
     choose: '— choose —', submit_vote: 'Submit vote',
-    thanks_voting: '✅ Thanks for voting!',
-    no_votes: 'No votes yet.',
+    thanks_voting: '✅ Thanks for voting!', no_votes: 'No votes yet.',
     voting_not_open_session: 'Voting is not open for this session.',
     session_not_found: 'Session not found.',
     confirm_delete_session: 'Delete this entire session? This cannot be undone.',
-    confirm_delete_match: 'Delete this match?',
-    confirm_delete_player: 'Remove this player?',
-    how_many_teams: 'How many teams? (2 to 10)',
-    must_2_10: 'Must be between 2 and 10',
+    confirm_delete_match: 'Delete this match?', confirm_delete_player: 'Remove this player?',
+    how_many_teams: 'How many teams? (2 to 10)', must_2_10: 'Must be between 2 and 10',
     enter_valid_numbers: 'Enter valid numbers',
     appearances: 'Appearances', edit: 'Edit',
-    back_to_players: '← Back to players',
-    player_not_found: 'Player not found.',
-    goals_count: 'Goals',
-    start_session_matches: 'Start matches',
-    pick_first_match: 'Pick the first match',
+    back_to_players: '← Back to players', player_not_found: 'Player not found.', goals_count: 'Goals',
+    start_session_matches: 'Start matches', pick_first_match: 'Pick the first match',
     submit_score: 'Submit score', next_match: 'Next match',
-    submit_session: '🏁 Submit session',
-    session_submitted: '✅ Session submitted',
+    submit_session: '🏁 Submit session', session_submitted: '✅ Session submitted',
     confirm_submit_session: 'Submit the session? Matches become read-only. You can reopen anytime.',
-    confirm_reopen_session: 'Reopen the session to edit matches?',
-    reopen_session: 'Reopen session',
-    not_enough_teams: 'Need at least 2 teams.',
-    select_two_teams: 'Select two different teams.',
+    confirm_reopen_session: 'Reopen the session to edit matches?', reopen_session: 'Reopen session',
+    not_enough_teams: 'Need at least 2 teams.', select_two_teams: 'Select two different teams.',
     change_teams: 'Change teams',
     change_teams_warn: 'Changing teams keeps the current score but reassigns goals to the new teams. Continue?',
-    locked: 'Locked',
-    who_are_you: 'Who are you?',
-    select_yourself: '— Select your name —',
-    already_voted: 'already voted',
-    player_already_voted: 'This player already voted. Each player can only vote once.',
-    edit_vote: '✏️ Edit my vote',
-    vote_tracker: 'Vote tracker',
-    voted: 'Voted',
-    not_voted: 'Not voted yet',
+    locked: 'Locked', who_are_you: 'Who are you?', select_yourself: '— Select your name —',
+    already_voted: 'already voted', edit_vote: '✏️ Edit my vote',
+    vote_tracker: 'Vote tracker', voted: 'Voted', not_voted: 'Not voted yet',
     anonymous_note: 'Your vote is anonymous — your name is only used to prevent double voting.',
     update_vote: 'Update vote',
+    copyright_title: 'About this app',
+    copyright_text: 'This application is developed and used exclusively for the Futsal course at Hochschule Fulda. It is a private, non-commercial project with no affiliation to any business or third-party service. The HS Fulda name and logo are used with respect to the institution for internal course management only.',
+    contact: 'Contact',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
@@ -88,25 +74,21 @@ const translations = {
     no_sessions: 'Noch keine Termine.', live: 'LIVE', voting: 'ABSTIMMUNG',
     delete: 'Löschen',
     top_scorers_session: '⭐ Top-Torschützen (dieser Termin)',
-    top_scorers_all: '⚽ Top-Torschützen (alle Termine)',
-    voting_label: '🗳 Abstimmung',
-    voting_not_open: 'Abstimmung noch nicht offen.',
+    voting_label: '🗳 Abstimmung', voting_not_open: 'Abstimmung noch nicht offen.',
     open_voting_page: 'Abstimmungsseite öffnen →',
-    open_voting: 'Abstimmung öffnen', close_voting: 'Abstimmung schließen',
-    share: 'Teilen:',
+    open_voting: 'Abstimmung öffnen', close_voting: 'Abstimmung schließen', share: 'Teilen:',
     assigned: 'zugeteilt', not_assigned: 'noch nicht zugeteilt',
-    assigned_section: '✅ Zugeteilt',
-    unassigned_section: '⏳ Noch nicht zugeteilt',
+    assigned_section: '✅ Zugeteilt', unassigned_section: '⏳ Noch nicht zugeteilt',
     everyone_assigned: 'Alle sind einem Team zugeteilt.',
-    rename_team: 'Neuer Teamname:',
-    rename_player: 'Neuer Spielername:',
-    no_players_team: 'Noch keine Spieler',
-    remove: 'entfernen', no_data: 'Noch keine Daten.',
+    rename_team: 'Neuer Teamname:', rename_player: 'Neuer Spielername:',
+    no_players_team: 'Noch keine Spieler', remove: 'entfernen', no_data: 'Noch keine Daten.',
     season_lb: 'Saison-Bestenliste',
-    most_best_player: '🏆 Meiste „Bester Spieler"-Auszeichnungen',
-    most_best_keeper: '🧤 Meiste „Bester Torwart"-Auszeichnungen',
-    most_best_defender: '🛡 Meiste „Bester Verteidiger"-Auszeichnungen',
-    most_pepe: '🪓 Meiste Pepe-Auszeichnungen',
+    award_wins: 'Auszeichnungen (alle Termine)',
+    best_player_wins: '🏆 Bester Spieler des Termins',
+    best_keeper_wins: '🧤 Bester Torwart des Termins',
+    best_defender_wins: '🛡 Bester Verteidiger des Termins',
+    best_goal_wins: '⚽ Bestes Tor des Termins',
+    pepe_wins: '🪓 Pepe-Preis des Termins',
     goals_per_session: '📈 Tore pro Termin',
     add_player: 'Spielername', add: 'Hinzufügen', no_players: 'Noch keine Spieler.',
     admin_login: 'Admin-Login', email: 'E-Mail', password: 'Passwort',
@@ -118,43 +100,31 @@ const translations = {
     pepe_hint: 'Der aggressivste Spieler heute — zu viele harte Aktionen',
     choose_fav_goal: 'Wer hat dein Lieblingstor erzielt?',
     choose: '— wählen —', submit_vote: 'Stimme abgeben',
-    thanks_voting: '✅ Danke fürs Abstimmen!',
-    no_votes: 'Noch keine Stimmen.',
+    thanks_voting: '✅ Danke fürs Abstimmen!', no_votes: 'Noch keine Stimmen.',
     voting_not_open_session: 'Abstimmung für diesen Termin nicht offen.',
     session_not_found: 'Termin nicht gefunden.',
     confirm_delete_session: 'Ganzen Termin löschen? Das kann nicht rückgängig gemacht werden.',
-    confirm_delete_match: 'Dieses Spiel löschen?',
-    confirm_delete_player: 'Diesen Spieler entfernen?',
-    how_many_teams: 'Wie viele Teams? (2 bis 10)',
-    must_2_10: 'Muss zwischen 2 und 10 sein',
+    confirm_delete_match: 'Dieses Spiel löschen?', confirm_delete_player: 'Diesen Spieler entfernen?',
+    how_many_teams: 'Wie viele Teams? (2 bis 10)', must_2_10: 'Muss zwischen 2 und 10 sein',
     enter_valid_numbers: 'Gültige Zahlen eingeben',
     appearances: 'Einsätze', edit: 'Bearbeiten',
-    back_to_players: '← Zurück zu Spielern',
-    player_not_found: 'Spieler nicht gefunden.',
-    goals_count: 'Tore',
-    start_session_matches: 'Spiele starten',
-    pick_first_match: 'Erstes Spiel wählen',
+    back_to_players: '← Zurück zu Spielern', player_not_found: 'Spieler nicht gefunden.', goals_count: 'Tore',
+    start_session_matches: 'Spiele starten', pick_first_match: 'Erstes Spiel wählen',
     submit_score: 'Endstand bestätigen', next_match: 'Nächstes Spiel',
-    submit_session: '🏁 Termin abschließen',
-    session_submitted: '✅ Termin abgeschlossen',
+    submit_session: '🏁 Termin abschließen', session_submitted: '✅ Termin abgeschlossen',
     confirm_submit_session: 'Termin abschließen? Spiele werden schreibgeschützt. Jederzeit wieder öffnen.',
-    confirm_reopen_session: 'Termin zum Bearbeiten wieder öffnen?',
-    reopen_session: 'Termin wieder öffnen',
-    not_enough_teams: 'Mindestens 2 Teams nötig.',
-    select_two_teams: 'Zwei verschiedene Teams auswählen.',
+    confirm_reopen_session: 'Termin zum Bearbeiten wieder öffnen?', reopen_session: 'Termin wieder öffnen',
+    not_enough_teams: 'Mindestens 2 Teams nötig.', select_two_teams: 'Zwei verschiedene Teams auswählen.',
     change_teams: 'Teams ändern',
     change_teams_warn: 'Teams ändern behält das aktuelle Ergebnis, aber Tore werden den neuen Teams zugewiesen. Fortfahren?',
-    locked: 'Gesperrt',
-    who_are_you: 'Wer bist du?',
-    select_yourself: '— Deinen Namen wählen —',
-    already_voted: 'hat bereits abgestimmt',
-    player_already_voted: 'Dieser Spieler hat bereits abgestimmt. Jeder Spieler kann nur einmal abstimmen.',
-    edit_vote: '✏️ Stimme bearbeiten',
-    vote_tracker: 'Abstimmungs-Übersicht',
-    voted: 'Abgestimmt',
-    not_voted: 'Noch nicht abgestimmt',
+    locked: 'Gesperrt', who_are_you: 'Wer bist du?', select_yourself: '— Deinen Namen wählen —',
+    already_voted: 'hat bereits abgestimmt', edit_vote: '✏️ Stimme bearbeiten',
+    vote_tracker: 'Abstimmungs-Übersicht', voted: 'Abgestimmt', not_voted: 'Noch nicht abgestimmt',
     anonymous_note: 'Deine Stimme ist anonym — der Name wird nur zur Verhinderung doppelter Abstimmungen verwendet.',
     update_vote: 'Stimme aktualisieren',
+    copyright_title: 'Über diese App',
+    copyright_text: 'Diese Anwendung wurde ausschließlich für den Futsal-Kurs der Hochschule Fulda entwickelt und genutzt. Es handelt sich um ein privates, nicht-kommerzielles Projekt ohne Verbindung zu Unternehmen oder Drittanbietern. Name und Logo der HS Fulda werden ausschließlich zur internen Kursverwaltung verwendet.',
+    contact: 'Kontakt',
   },
 }
 
@@ -201,12 +171,8 @@ function useAuth() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null); checkAdmin(session?.user)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null); checkAdmin(session?.user)
-    })
+    supabase.auth.getSession().then(({ data: { session } }) => { setUser(session?.user ?? null); checkAdmin(session?.user) })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => { setUser(session?.user ?? null); checkAdmin(session?.user) })
     return () => subscription.unsubscribe()
   }, [])
   async function checkAdmin(u) {
@@ -224,22 +190,25 @@ function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const inSession = !!location.pathname.match(/^\/session\/([^/]+)/)
+  const isHome = location.pathname === '/'
   const topNav = [
     { to: '/', icon: '🏠', label: t('sessions'), active: location.pathname === '/' },
     { to: '/players', icon: '👥', label: t('players'), active: location.pathname.startsWith('/players') || location.pathname.startsWith('/player/') },
     { to: '/leaderboard', icon: '⭐', label: t('leaderboard'), active: location.pathname === '/leaderboard' },
   ]
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24 transition-colors">
-      <header className="bg-fulda dark:bg-emerald-900 text-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors"
+         style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+      {/* Fixed header */}
+      <header className="sticky top-0 z-50 bg-fulda dark:bg-emerald-900 text-white shadow">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {inSession && (<button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">{t('back')}</button>)}
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-<span className="bg-white rounded-md p-1 shrink-0 shadow-sm">
-  <img src="/icon-192.png" alt="Futsal Kurs" className="h-8 w-8 object-cover rounded" />
-</span>
-              <span className="text-lg font-bold truncate">Futsal Kurs</span>
+            <Link to="/" className="flex items-center gap-2 min-w-0">
+              {/* HS Fulda logo left */}
+              <img src={HS_LOGO} alt="HS Fulda" className="h-7 w-auto shrink-0 brightness-0 invert" />
+              {/* App icon center */}
+              <img src={APP_ICON} alt="Futsal Kurs" className="h-9 w-9 rounded-xl object-cover shrink-0 shadow-sm" />
             </Link>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -251,9 +220,20 @@ function Layout({ children }) {
           </div>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-5">{children}</main>
+
+      <main className="max-w-3xl mx-auto px-4 py-5 relative">
+        {/* Watermark — tri-leaf HS Fulda logo, faint, behind content, only on home page */}
+        {isHome && (
+          <div className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden" aria-hidden="true">
+            <img src={HS_LOGO} alt="" className="w-72 opacity-[0.04] dark:opacity-[0.06] grayscale" style={{ filter: 'grayscale(1)' }} />
+          </div>
+        )}
+        <div className="relative z-10">{children}</div>
+      </main>
+
       {!inSession && (
-        <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg"
+             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="max-w-3xl mx-auto grid grid-cols-3">
             {topNav.map(item => (
               <Link key={item.to} to={item.to} className={`flex flex-col items-center py-2.5 transition ${item.active ? 'text-fulda dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -317,6 +297,12 @@ function HomePage() {
           )
         })}
       </div>
+      {/* Copyright footer */}
+      <div className="mt-8 pt-4 border-t dark:border-gray-800 text-center space-y-1">
+        <p className="text-xs text-gray-400 dark:text-gray-600">© Hochschule Fulda — Futsal Kurs</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600">{t('copyright_text')}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600">{t('contact')}: <a href="mailto:ismail.elhathout@gmx.de" className="underline">ismail.elhathout@gmx.de</a></p>
+      </div>
     </div>
   )
 }
@@ -340,7 +326,7 @@ function SessionPage() {
   const [editingTeamsForMatch, setEditingTeamsForMatch] = useState(null)
   const [editTeamA, setEditTeamA] = useState('')
   const [editTeamB, setEditTeamB] = useState('')
-  const [voteTracker, setVoteTracker] = useState([]) // [{player_id, name, voted}]
+  const [voteTracker, setVoteTracker] = useState([])
 
   useEffect(() => { loadAll() }, [id])
 
@@ -357,8 +343,7 @@ function SessionPage() {
     setSession(sRes.data); setTeams(tRes.data || []); setAllPlayers(pRes.data || [])
     setTeamPlayers(tpRes.data || []); setMatches(mRes.data || []); setGoals(gRes.data || [])
     setLoading(false)
-    // Load vote tracker for admin
-    if (sRes.data?.voting_open || sRes.data?.submitted) loadVoteTracker(tpRes.data || [])
+    if (sRes.data) loadVoteTracker(tpRes.data || [])
   }
 
   async function loadVoteTracker(tp) {
@@ -449,12 +434,11 @@ function SessionPage() {
 
   async function deleteMatch(matchId) {
     if (!confirm(t('confirm_delete_match'))) return
-    const sortedBeforeDelete = [...matches].sort((a,b) => a.match_order - b.match_order)
-    const idx = sortedBeforeDelete.findIndex(m => m.id === matchId)
-    const prevMatch = idx > 0 ? sortedBeforeDelete[idx - 1] : null
+    const sorted = [...matches].sort((a,b) => a.match_order - b.match_order)
+    const idx = sorted.findIndex(m => m.id === matchId)
+    const prevMatch = idx > 0 ? sorted[idx - 1] : null
     setMatches(prev => prev.filter(m => m.id !== matchId))
     setGoals(prev => prev.filter(g => g.match_id !== matchId))
-    // If deleting current match, restore previous as current
     const newCurrentId = session.current_match_id === matchId ? (prevMatch?.id || null) : session.current_match_id
     setSession(prev => ({ ...prev, current_match_id: newCurrentId }))
     try {
@@ -469,7 +453,6 @@ function SessionPage() {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
     const scoreA = match.score_a; const scoreB = match.score_b
-    // Keep score, reassign goals to new teams (delete old, insert same count for new teams)
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, team_a_id: editTeamA, team_b_id: editTeamB } : m))
     setGoals(prev => prev.filter(g => g.match_id !== matchId))
     setEditingTeamsForMatch(null); setEditTeamA(''); setEditTeamB('')
@@ -563,7 +546,7 @@ function SessionPage() {
   const currentMatchId = session.current_match_id
 
   return (
-    <div className="space-y-5 pb-20">
+    <div className="space-y-5">
       <div className="flex justify-between items-start">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -609,22 +592,34 @@ function SessionPage() {
 
           <section className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
             <h2 className="font-bold mb-2">{t('voting_label')}</h2>
+            {/* Voting link — always show when open */}
             {session.voting_open
-              ? <Link to={`/vote/${id}`} className="inline-block bg-fulda text-white px-4 py-2 rounded-lg font-semibold shadow-sm">{t('open_voting_page')}</Link>
-              : <p className="text-sm text-gray-500 dark:text-gray-400">{t('voting_not_open')}</p>}
+              ? <Link to={`/vote/${id}`} className="inline-block bg-fulda text-white px-4 py-2 rounded-lg font-semibold shadow-sm mb-3">{t('open_voting_page')}</Link>
+              : <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{t('voting_not_open')}</p>}
+            {/* Admin controls — always visible to admin */}
             {isAdmin && (
-              <div className="mt-3 space-y-3">
-                <button onClick={toggleVoting} className="bg-gray-800 dark:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">{session.voting_open ? t('close_voting') : t('open_voting')}</button>
-                {session.voting_open && <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{t('share')} <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/vote/{id}</code></p>}
+              <div className="space-y-3">
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={toggleVoting} className="bg-gray-800 dark:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">
+                    {session.voting_open ? t('close_voting') : t('open_voting')}
+                  </button>
+                </div>
+                {session.voting_open && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{t('share')} <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/vote/{id}</code></p>
+                )}
                 {/* Vote tracker — admin only */}
                 {voteTracker.length > 0 && (
                   <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
-                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">{t('vote_tracker')} — {voteTracker.filter(v=>v.voted).length}/{voteTracker.length}</div>
+                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                      {t('vote_tracker')} — {voteTracker.filter(v=>v.voted).length}/{voteTracker.length}
+                    </div>
                     <div className="divide-y dark:divide-gray-700">
-                      {voteTracker.sort((a,b) => b.voted - a.voted).map(v => (
+                      {[...voteTracker].sort((a,b) => b.voted - a.voted).map(v => (
                         <div key={v.player_id} className="flex items-center justify-between px-3 py-2 text-sm">
                           <span>{v.name}</span>
-                          <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>{v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}</span>
+                          <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>
+                            {v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -701,7 +696,6 @@ function SessionPage() {
             <h2 className="font-bold">{t('matches')}</h2>
             {!editable && <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded-full font-semibold">🔒 {t('locked')}</span>}
           </div>
-
           {matches.length === 0 && isAdmin && teams.length >= 2 && editable && (
             <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
               <h3 className="font-semibold mb-3">{t('pick_first_match')}</h3>
@@ -719,7 +713,6 @@ function SessionPage() {
             </div>
           )}
           {matches.length === 0 && teams.length < 2 && (<p className="text-sm text-gray-500 dark:text-gray-400">{t('not_enough_teams')}</p>)}
-
           {sortedMatches.length > 0 && (
             <div className="space-y-2 mt-2">
               {sortedMatches.map(m => {
@@ -728,14 +721,12 @@ function SessionPage() {
                 const isCurrent = editable && m.id === currentMatchId
                 const isExpanded = isCurrent || expandedMatchId === m.id
                 const isEditingTeams = editingTeamsForMatch === m.id
-
                 if (!isExpanded) return (
                   <button key={m.id} onClick={() => setExpandedMatchId(m.id)} className="w-full flex justify-between items-center bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                     <span className="text-gray-600 dark:text-gray-300"><span className="text-green-600 dark:text-emerald-400 mr-1">✓</span>Match {m.match_order}: Team {a?.label} vs Team {b?.label}</span>
                     <span className="font-bold tabular-nums">{m.score_a}–{m.score_b}</span>
                   </button>
                 )
-
                 return (
                   <div key={m.id} className={`border rounded-lg p-3 ${isCurrent ? 'border-fulda bg-white dark:bg-gray-900 shadow-md' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
                     <div className="flex justify-between items-center mb-3">
@@ -782,7 +773,6 @@ function SessionPage() {
               })}
             </div>
           )}
-
           {isAdmin && matches.length > 0 && editable && (
             <button onClick={submitSession} className="w-full mt-4 border-2 border-dashed border-fulda text-fulda dark:text-emerald-400 font-bold py-3 rounded-lg hover:bg-fulda hover:text-white">{t('submit_session')}</button>
           )}
@@ -792,7 +782,8 @@ function SessionPage() {
         </section>
       )}
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg"
+           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="max-w-3xl mx-auto grid grid-cols-3">
           {sessionTabs.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex flex-col items-center py-2.5 transition ${activeTab === tab.key ? 'text-fulda dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -915,15 +906,14 @@ function PlayerProfilePage() {
   )
 }
 
-// =================== VOTE PAGE (fully reworked) ===================
 function VotePage() {
   const { sessionId } = useParams()
   const { t } = useT()
   const [session, setSession] = useState(null)
-  const [players, setPlayers] = useState([]) // players assigned to this session
-  const [allVotedPlayerIds, setAllVotedPlayerIds] = useState(new Set()) // player_ids who already voted
-  const [selectedPlayerId, setSelectedPlayerId] = useState('') // "who are you"
-  const [existingVotes, setExistingVotes] = useState(null) // null = not voted, [] = voted
+  const [players, setPlayers] = useState([])
+  const [allVotedPlayerIds, setAllVotedPlayerIds] = useState(new Set())
+  const [selectedPlayerId, setSelectedPlayerId] = useState('')
+  const [existingVotes, setExistingVotes] = useState(null)
   const [votes, setVotes] = useState({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
   const [editing, setEditing] = useState(false)
   const [results, setResults] = useState({})
@@ -938,7 +928,6 @@ function VotePage() {
     const { data: tp } = await supabase.from('team_players').select('players(*), teams!inner(session_id)').eq('teams.session_id', sessionId)
     const uniq = {}; (tp || []).forEach(x => { if (x.players) uniq[x.players.id] = x.players })
     setPlayers(Object.values(uniq).sort((a,b) => a.name.localeCompare(b.name)))
-    // Get all player IDs who already voted (for greying out in "who are you" dropdown)
     const { data: allVotes } = await supabase.from('votes').select('voter_player_id').eq('session_id', sessionId).not('voter_player_id', 'is', null)
     setAllVotedPlayerIds(new Set((allVotes || []).map(v => v.voter_player_id)))
     loadResults()
@@ -950,9 +939,8 @@ function VotePage() {
     const { data } = await supabase.from('votes').select('*').eq('session_id', sessionId).eq('voter_player_id', playerId)
     if (data && data.length > 0) {
       setExistingVotes(data)
-      // Pre-fill vote state with existing votes for editing
       const v = { best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' }
-      data.forEach(vote => { if (v.hasOwnProperty(vote.category)) v[vote.category] = vote.player_id })
+      data.forEach(vote => { if (Object.hasOwn(v, vote.category)) v[vote.category] = vote.player_id })
       setVotes(v)
     } else {
       setExistingVotes([])
@@ -978,7 +966,6 @@ function VotePage() {
       if (votes[cat]) inserts.push({ session_id: sessionId, category: cat, player_id: votes[cat], voter_player_id: selectedPlayerId })
     }
     if (inserts.length === 0) { alert('Select at least one category'); return }
-    // Delete existing votes for this player then re-insert (handles both new vote and edit)
     await supabase.from('votes').delete().eq('session_id', sessionId).eq('voter_player_id', selectedPlayerId)
     const { error } = await supabase.from('votes').insert(inserts)
     if (error) { alert(error.message); return }
@@ -999,42 +986,30 @@ function VotePage() {
   return (
     <div className="space-y-5 max-w-lg mx-auto px-4 py-5">
       <h1 className="text-2xl font-bold">{t('vote')} — {session.name || session.date}</h1>
-
-      {/* Step 1: Who are you? */}
       {!selectedPlayerId ? (
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-5 shadow-sm space-y-3">
           <h2 className="font-bold text-lg">{t('who_are_you')}</h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">{t('anonymous_note')}</p>
-          <select
-            value={selectedPlayerId}
-            onChange={e => { setSelectedPlayerId(e.target.value); checkAndLoadExistingVotes(e.target.value) }}
-            className="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-3 text-base"
-          >
+          <select value={selectedPlayerId} onChange={e => { setSelectedPlayerId(e.target.value); checkAndLoadExistingVotes(e.target.value) }}
+            className="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-3 text-base">
             <option value="">{t('select_yourself')}</option>
             {players.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name}{allVotedPlayerIds.has(p.id) ? ` — ${t('already_voted')}` : ''}
-              </option>
+              <option key={p.id} value={p.id}>{p.name}{allVotedPlayerIds.has(p.id) ? ` — ${t('already_voted')}` : ''}</option>
             ))}
           </select>
         </div>
       ) : (
         <>
-          {/* Identity confirmed bar */}
           <div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2">
             <span className="text-sm font-semibold text-fulda dark:text-emerald-400">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
             <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 dark:text-gray-400 underline">{t('back')}</button>
           </div>
-
-          {/* Already voted message */}
           {hasVoted && !editing && (
             <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm text-center space-y-3">
               <p className="text-fulda dark:text-emerald-400 font-semibold">{t('thanks_voting')}</p>
               <button onClick={() => setEditing(true)} className="text-sm border border-fulda text-fulda dark:text-emerald-400 px-4 py-2 rounded-lg font-semibold">{t('edit_vote')}</button>
             </div>
           )}
-
-          {/* Vote form */}
           {showForm && (
             <div className="space-y-3">
               <VoteSection title={t('best_player')} players={players} value={votes.best_player} onChange={v => setVotes({...votes, best_player: v})} />
@@ -1042,16 +1017,12 @@ function VotePage() {
               <VoteSection title={t('best_defender')} players={players} value={votes.best_defender} onChange={v => setVotes({...votes, best_defender: v})} />
               <VoteSection title={t('best_goal')} players={players} value={votes.best_goal} onChange={v => setVotes({...votes, best_goal: v})} hint={t('choose_fav_goal')} />
               <VoteSection title={t('pepe_award')} players={players} value={votes.pepe_award} onChange={v => setVotes({...votes, pepe_award: v})} hint={t('pepe_hint')} />
-              <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">
-                {editing ? t('update_vote') : t('submit_vote')}
-              </button>
+              <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">{editing ? t('update_vote') : t('submit_vote')}</button>
               {editing && <button onClick={() => setEditing(false)} className="w-full text-sm text-gray-500 dark:text-gray-400 py-2">{t('back')}</button>}
             </div>
           )}
         </>
       )}
-
-      {/* Results */}
       <div className="space-y-3">
         {[['best_player', t('best_player')], ['best_goalkeeper', t('best_keeper')], ['best_defender', t('best_defender')], ['best_goal', t('best_goal')], ['pepe_award', t('pepe_award')]].map(([cat,label]) => {
           const list = byCat(cat)
@@ -1085,69 +1056,100 @@ function VoteSection({ title, players, value, onChange, hint }) {
 function LeaderboardPage() {
   const { t } = useT()
   const { theme } = useTheme()
-  const [scorers, setScorers] = useState([])
-  const [bestPlayers, setBestPlayers] = useState([])
-  const [bestKeepers, setBestKeepers] = useState([])
-  const [bestDefenders, setBestDefenders] = useState([])
-  const [pepeAwards, setPepeAwards] = useState([])
+  const [awardWinners, setAwardWinners] = useState({ best_player: [], best_goalkeeper: [], best_defender: [], best_goal: [], pepe_award: [] })
   const [goalsBySession, setGoalsBySession] = useState([])
   const [loading, setLoading] = useState(true)
+
   useEffect(() => { load() }, [])
+
   async function load() {
     setLoading(true)
-    const { data: g } = await supabase.from('goals').select('player_id, players!goals_player_id_fkey(name)')
-    const sm = {}
-    ;(g || []).forEach(x => { if (x.player_id && x.players?.name) sm[x.players.name] = (sm[x.players.name] || 0) + 1 })
-    setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
-    async function countCat(cat, setter) {
-      const { data } = await supabase.from('votes').select('players(name), category').eq('category', cat)
-      const m = {}; (data || []).forEach(x => { if (x.players) m[x.players.name] = (m[x.players.name] || 0) + 1 })
-      setter(Object.entries(m).sort((a,b) => b[1] - a[1]))
-    }
-    await countCat('best_player', setBestPlayers)
-    await countCat('best_goalkeeper', setBestKeepers)
-    await countCat('best_defender', setBestDefenders)
-    await countCat('pepe_award', setPepeAwards)
-    const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
+    // Load all sessions that are submitted (voting closed)
+    const { data: sessions } = await supabase.from('sessions').select('id, date, name, submitted, voting_open').order('date', { ascending: true })
+    // Load all votes
+    const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players(name)')
+    // For each session that is submitted AND voting was used, find winner per category
+    const winnerCount = {} // { player_name: { cat: count } }
+    const cats = ['best_player', 'best_goalkeeper', 'best_defender', 'best_goal', 'pepe_award']
+    ;(sessions || []).filter(s => s.submitted).forEach(s => {
+      const sessionVotes = (allVotes || []).filter(v => v.session_id === s.id)
+      cats.forEach(cat => {
+        const catVotes = sessionVotes.filter(v => v.category === cat)
+        if (catVotes.length === 0) return
+        // Find winner = most votes
+        const countMap = {}
+        catVotes.forEach(v => { if (v.players?.name) countMap[v.players.name] = (countMap[v.players.name] || 0) + 1 })
+        const winner = Object.entries(countMap).sort((a,b) => b[1] - a[1])[0]
+        if (winner) {
+          if (!winnerCount[winner[0]]) winnerCount[winner[0]] = {}
+          winnerCount[winner[0]][cat] = (winnerCount[winner[0]][cat] || 0) + 1
+        }
+      })
+    })
+    // Build per-category leaderboard
+    const newAwards = {}
+    cats.forEach(cat => {
+      const entries = Object.entries(winnerCount)
+        .filter(([, cats]) => cats[cat])
+        .map(([name, cats]) => [name, cats[cat]])
+        .sort((a,b) => b[1] - a[1])
+      newAwards[cat] = entries
+    })
+    setAwardWinners(newAwards)
+
+    // Goals per session chart
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
     const gc = {}
     ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) gc[sid] = (gc[sid] || 0) + 1 })
-    setGoalsBySession((sessionsData || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
+    setGoalsBySession((sessions || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
     setLoading(false)
   }
+
   const Section = ({ title, list }) => (
     <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
       <h3 className="font-bold mb-3">{title}</h3>
       {list.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">{t('no_data')}</p> :
-        <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => <li key={n} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span><span className="font-bold text-fulda dark:text-emerald-400">{c}</span></li>)}</ol>}
+        <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => (
+          <li key={n} className="flex justify-between items-center">
+            <span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span>
+            <span className="font-bold text-fulda dark:text-emerald-400 bg-fulda/10 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full text-xs">{c}×</span>
+          </li>
+        ))}</ol>}
     </div>
   )
+
   if (loading) return <p>{t('loading')}</p>
   const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280'
+  const hasData = goalsBySession.some(d => d.goals > 0)
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('season_lb')}</h1>
-      {goalsBySession.length > 0 && (
+
+      {/* Goals per session — bar chart + trend line */}
+      {hasData && (
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold mb-3">{t('goals_per_session')}</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={goalsBySession} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={goalsBySession} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#e5e7eb'} />
-                <XAxis dataKey="label" stroke={axisColor} tick={{ fontSize: 11 }} />
+                <XAxis dataKey="label" stroke={axisColor} tick={{ fontSize: 10 }} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: theme === 'dark' ? '#111827' : '#fff', border: '1px solid #00A859', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="goals" stroke="#00A859" strokeWidth={3} dot={{ r: 4, fill: '#00A859' }} />
-              </LineChart>
+                <Bar dataKey="goals" fill="#00A859" radius={[4,4,0,0]} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
-      <Section title={t('top_scorers_all')} list={scorers} />
-      <Section title={t('most_best_player')} list={bestPlayers} />
-      <Section title={t('most_best_keeper')} list={bestKeepers} />
-      <Section title={t('most_best_defender')} list={bestDefenders} />
-      <Section title={t('most_pepe')} list={pepeAwards} />
+
+      {/* Award winners leaderboard */}
+      <Section title={t('best_player_wins')} list={awardWinners.best_player || []} />
+      <Section title={t('best_keeper_wins')} list={awardWinners.best_goalkeeper || []} />
+      <Section title={t('best_defender_wins')} list={awardWinners.best_defender || []} />
+      <Section title={t('best_goal_wins')} list={awardWinners.best_goal || []} />
+      <Section title={t('pepe_wins')} list={awardWinners.pepe_award || []} />
     </div>
   )
 }
