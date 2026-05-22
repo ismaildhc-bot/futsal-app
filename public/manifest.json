@@ -1,7 +1,7 @@
 {
-  "name": "Futsal Kurs",
+  "name": "Futsal Kurs – HS Fulda",
   "short_name": "Futsal",
-  "description": "Hochschule Fulda Futsal session manager",
+  "description": "HS Fulda Futsal course session manager",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#00A859",
@@ -11,7 +11,8 @@
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
