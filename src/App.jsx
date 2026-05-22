@@ -11,7 +11,7 @@ const translations = {
     standings: 'Standings', teams: 'Teams', matches: 'Matches',
     new: '+ New', back: '← Back', admin: 'ADMIN', login: 'Login',
     no_sessions: 'No sessions yet.', live: 'LIVE', voting: 'VOTING',
-    delete: 'Delete', set_final_score: '📝 Set final score directly',
+    delete: 'Delete',
     top_scorers_session: '⭐ Top scorers (this session)',
     top_scorers_all: '⚽ Top Scorers (all sessions)',
     voting_label: '🗳 Voting',
@@ -37,55 +37,56 @@ const translations = {
     admin_login: 'Admin Login', email: 'Email', password: 'Password',
     log_in: 'Log in', logging_in: 'Logging in…', log_out: 'Log out',
     loading: 'Loading…', vote: 'Vote',
-    best_player: '🏆 Best Player',
-    best_keeper: '🧤 Best Goalkeeper',
-    best_defender: '🛡 Best Defender',
-    best_goal: '⚽ Best Goal',
+    best_player: '🏆 Best Player', best_keeper: '🧤 Best Goalkeeper',
+    best_defender: '🛡 Best Defender', best_goal: '⚽ Best Goal',
     pepe_award: '🪓🚨 Pepe Award',
     pepe_hint: 'The most aggressive player today — too many bad contacts',
     choose_fav_goal: 'Choose who scored your favourite goal',
     choose: '— choose —', submit_vote: 'Submit vote',
-    thanks_voting: '✅ Thanks for voting! See live results below.',
+    thanks_voting: '✅ Thanks for voting!',
     no_votes: 'No votes yet.',
     voting_not_open_session: 'Voting is not open for this session.',
     session_not_found: 'Session not found.',
     confirm_delete_session: 'Delete this entire session? This cannot be undone.',
     confirm_delete_match: 'Delete this match?',
-    confirm_delete_goal: 'Delete this goal?',
     confirm_delete_player: 'Remove this player?',
     how_many_teams: 'How many teams? (2 to 10)',
     must_2_10: 'Must be between 2 and 10',
-    final_score_for_team: 'Final score for Team',
     enter_valid_numbers: 'Enter valid numbers',
-    replace_existing_goals: 'This match already has',
-    recorded_goals_warn: 'recorded goal(s).\n\nOK = REPLACE all existing goals with the new score',
-    cancel_keep: '.\nCancel = keep existing goals (no change).',
-    appearances: 'Appearances',
-    edit: 'Edit',
+    appearances: 'Appearances', edit: 'Edit',
     back_to_players: '← Back to players',
     player_not_found: 'Player not found.',
     goals_count: 'Goals',
     start_session_matches: 'Start matches',
     pick_first_match: 'Pick the first match',
-    submit_score: 'Submit score',
-    next_match: 'Next match',
+    submit_score: 'Submit score', next_match: 'Next match',
     submit_session: '🏁 Submit session',
     session_submitted: '✅ Session submitted',
-    confirm_submit_session: 'Submit the session? Matches become read-only. You can reopen anytime to edit.',
+    confirm_submit_session: 'Submit the session? Matches become read-only. You can reopen anytime.',
     confirm_reopen_session: 'Reopen the session to edit matches?',
     reopen_session: 'Reopen session',
-    not_enough_teams: 'Need at least 2 teams in this session.',
-    select_two_teams: 'Select two different teams to start.',
+    not_enough_teams: 'Need at least 2 teams.',
+    select_two_teams: 'Select two different teams.',
     change_teams: 'Change teams',
-    change_teams_warn: 'Changing teams will RESET this match\'s score to 0-0 and delete all goals in this match.\n\nContinue?',
+    change_teams_warn: 'Changing teams keeps the current score but reassigns goals to the new teams. Continue?',
     locked: 'Locked',
+    who_are_you: 'Who are you?',
+    select_yourself: '— Select your name —',
+    already_voted: 'already voted',
+    player_already_voted: 'This player already voted. Each player can only vote once.',
+    edit_vote: '✏️ Edit my vote',
+    vote_tracker: 'Vote tracker',
+    voted: 'Voted',
+    not_voted: 'Not voted yet',
+    anonymous_note: 'Your vote is anonymous — your name is only used to prevent double voting.',
+    update_vote: 'Update vote',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
     standings: 'Tabelle', teams: 'Teams', matches: 'Spiele',
     new: '+ Neu', back: '← Zurück', admin: 'ADMIN', login: 'Login',
     no_sessions: 'Noch keine Termine.', live: 'LIVE', voting: 'ABSTIMMUNG',
-    delete: 'Löschen', set_final_score: '📝 Endstand direkt eintragen',
+    delete: 'Löschen',
     top_scorers_session: '⭐ Top-Torschützen (dieser Termin)',
     top_scorers_all: '⚽ Top-Torschützen (alle Termine)',
     voting_label: '🗳 Abstimmung',
@@ -111,48 +112,49 @@ const translations = {
     admin_login: 'Admin-Login', email: 'E-Mail', password: 'Passwort',
     log_in: 'Anmelden', logging_in: 'Anmelden…', log_out: 'Abmelden',
     loading: 'Lädt…', vote: 'Abstimmen',
-    best_player: '🏆 Bester Spieler',
-    best_keeper: '🧤 Bester Torwart',
-    best_defender: '🛡 Bester Verteidiger',
-    best_goal: '⚽ Bestes Tor',
+    best_player: '🏆 Bester Spieler', best_keeper: '🧤 Bester Torwart',
+    best_defender: '🛡 Bester Verteidiger', best_goal: '⚽ Bestes Tor',
     pepe_award: '🪓🚨 Pepe-Preis',
     pepe_hint: 'Der aggressivste Spieler heute — zu viele harte Aktionen',
     choose_fav_goal: 'Wer hat dein Lieblingstor erzielt?',
     choose: '— wählen —', submit_vote: 'Stimme abgeben',
-    thanks_voting: '✅ Danke fürs Abstimmen! Live-Ergebnisse unten.',
+    thanks_voting: '✅ Danke fürs Abstimmen!',
     no_votes: 'Noch keine Stimmen.',
     voting_not_open_session: 'Abstimmung für diesen Termin nicht offen.',
     session_not_found: 'Termin nicht gefunden.',
     confirm_delete_session: 'Ganzen Termin löschen? Das kann nicht rückgängig gemacht werden.',
     confirm_delete_match: 'Dieses Spiel löschen?',
-    confirm_delete_goal: 'Dieses Tor löschen?',
     confirm_delete_player: 'Diesen Spieler entfernen?',
     how_many_teams: 'Wie viele Teams? (2 bis 10)',
     must_2_10: 'Muss zwischen 2 und 10 sein',
-    final_score_for_team: 'Endstand für Team',
     enter_valid_numbers: 'Gültige Zahlen eingeben',
-    replace_existing_goals: 'Dieses Spiel hat bereits',
-    recorded_goals_warn: 'erfasste Tor(e).\n\nOK = ALLE bestehenden Tore mit neuem Stand ERSETZEN',
-    cancel_keep: '.\nAbbrechen = bestehende Tore behalten (keine Änderung).',
-    appearances: 'Einsätze',
-    edit: 'Bearbeiten',
+    appearances: 'Einsätze', edit: 'Bearbeiten',
     back_to_players: '← Zurück zu Spielern',
     player_not_found: 'Spieler nicht gefunden.',
     goals_count: 'Tore',
     start_session_matches: 'Spiele starten',
     pick_first_match: 'Erstes Spiel wählen',
-    submit_score: 'Endstand bestätigen',
-    next_match: 'Nächstes Spiel',
+    submit_score: 'Endstand bestätigen', next_match: 'Nächstes Spiel',
     submit_session: '🏁 Termin abschließen',
     session_submitted: '✅ Termin abgeschlossen',
-    confirm_submit_session: 'Termin abschließen? Spiele werden schreibgeschützt. Du kannst jederzeit wieder öffnen.',
+    confirm_submit_session: 'Termin abschließen? Spiele werden schreibgeschützt. Jederzeit wieder öffnen.',
     confirm_reopen_session: 'Termin zum Bearbeiten wieder öffnen?',
     reopen_session: 'Termin wieder öffnen',
-    not_enough_teams: 'Mindestens 2 Teams im Termin nötig.',
+    not_enough_teams: 'Mindestens 2 Teams nötig.',
     select_two_teams: 'Zwei verschiedene Teams auswählen.',
     change_teams: 'Teams ändern',
-    change_teams_warn: 'Teams ändern setzt das Ergebnis auf 0-0 zurück und löscht alle Tore dieses Spiels.\n\nFortfahren?',
+    change_teams_warn: 'Teams ändern behält das aktuelle Ergebnis, aber Tore werden den neuen Teams zugewiesen. Fortfahren?',
     locked: 'Gesperrt',
+    who_are_you: 'Wer bist du?',
+    select_yourself: '— Deinen Namen wählen —',
+    already_voted: 'hat bereits abgestimmt',
+    player_already_voted: 'Dieser Spieler hat bereits abgestimmt. Jeder Spieler kann nur einmal abstimmen.',
+    edit_vote: '✏️ Stimme bearbeiten',
+    vote_tracker: 'Abstimmungs-Übersicht',
+    voted: 'Abgestimmt',
+    not_voted: 'Noch nicht abgestimmt',
+    anonymous_note: 'Deine Stimme ist anonym — der Name wird nur zur Verhinderung doppelter Abstimmungen verwendet.',
+    update_vote: 'Stimme aktualisieren',
   },
 }
 
@@ -223,8 +225,8 @@ function Layout({ children }) {
   const navigate = useNavigate()
   const inSession = !!location.pathname.match(/^\/session\/([^/]+)/)
   const topNav = [
-    { to: '/',            icon: '🏠', label: t('sessions'),    active: location.pathname === '/' },
-    { to: '/players',     icon: '👥', label: t('players'),     active: location.pathname.startsWith('/players') || location.pathname.startsWith('/player/') },
+    { to: '/', icon: '🏠', label: t('sessions'), active: location.pathname === '/' },
+    { to: '/players', icon: '👥', label: t('players'), active: location.pathname.startsWith('/players') || location.pathname.startsWith('/player/') },
     { to: '/leaderboard', icon: '⭐', label: t('leaderboard'), active: location.pathname === '/leaderboard' },
   ]
   return (
@@ -335,9 +337,10 @@ function SessionPage() {
   const [expandedMatchId, setExpandedMatchId] = useState(null)
   const [pickA, setPickA] = useState('')
   const [pickB, setPickB] = useState('')
-  const [editingTeamsForMatch, setEditingTeamsForMatch] = useState(null) // match.id whose team-edit dropdowns are open
+  const [editingTeamsForMatch, setEditingTeamsForMatch] = useState(null)
   const [editTeamA, setEditTeamA] = useState('')
   const [editTeamB, setEditTeamB] = useState('')
+  const [voteTracker, setVoteTracker] = useState([]) // [{player_id, name, voted}]
 
   useEffect(() => { loadAll() }, [id])
 
@@ -354,6 +357,17 @@ function SessionPage() {
     setSession(sRes.data); setTeams(tRes.data || []); setAllPlayers(pRes.data || [])
     setTeamPlayers(tpRes.data || []); setMatches(mRes.data || []); setGoals(gRes.data || [])
     setLoading(false)
+    // Load vote tracker for admin
+    if (sRes.data?.voting_open || sRes.data?.submitted) loadVoteTracker(tpRes.data || [])
+  }
+
+  async function loadVoteTracker(tp) {
+    const uniqPlayers = {}
+    ;(tp || []).forEach(x => { if (x.players) uniqPlayers[x.players.id] = x.players.name })
+    if (Object.keys(uniqPlayers).length === 0) return
+    const { data: votes } = await supabase.from('votes').select('voter_player_id').eq('session_id', id).not('voter_player_id', 'is', null)
+    const votedIds = new Set((votes || []).map(v => v.voter_player_id))
+    setVoteTracker(Object.entries(uniqPlayers).map(([pid, name]) => ({ player_id: pid, name, voted: votedIds.has(pid) })))
   }
 
   async function assignPlayer(playerId, teamId) {
@@ -362,9 +376,7 @@ function SessionPage() {
     const targetTeam = teams.find(tt => tt.id === teamId)
     setTeamPlayers(prev => {
       const filtered = prev.filter(tp => !(tp.player_id === playerId && sessionTeamIds.includes(tp.team_id)))
-      if (teamId && player && targetTeam) {
-        filtered.push({ id: `temp-${Date.now()}`, player_id: playerId, team_id: teamId, players: player, teams: { session_id: id } })
-      }
+      if (teamId && player && targetTeam) filtered.push({ id: `temp-${Date.now()}`, player_id: playerId, team_id: teamId, players: player, teams: { session_id: id } })
       return filtered
     })
     try {
@@ -381,48 +393,16 @@ function SessionPage() {
     setGoals(prev => [...prev, { id: tempGoalId, match_id: matchId, team_id: teamId, player_id: null, assist_player_id: null, players: null, assist_player: null }])
     setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: isA ? m.score_a + 1 : m.score_a, score_b: !isA ? m.score_b + 1 : m.score_b, played: true } : m))
     try {
-      const { data: insertedGoal, error: gErr } = await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: null })
+      const { data: ig, error: gErr } = await supabase.from('goals').insert({ match_id: matchId, team_id: teamId, player_id: null })
         .select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)').single()
       if (gErr) throw gErr
       await supabase.from('matches').update({ score_a: isA ? match.score_a + 1 : match.score_a, score_b: !isA ? match.score_b + 1 : match.score_b, played: true }).eq('id', matchId)
-      setGoals(prev => prev.map(g => g.id === tempGoalId ? insertedGoal : g))
-    } catch (e) { loadAll() }
-  }
-
-  async function setFinalScore(matchId) {
-    const match = matches.find(m => m.id === matchId)
-    if (!match) return
-    const a = teams.find(tt => tt.id === match.team_a_id)
-    const b = teams.find(tt => tt.id === match.team_b_id)
-    const aStr = prompt(`${t('final_score_for_team')} ${a?.label}?`, String(match.score_a))
-    if (aStr === null) return
-    const bStr = prompt(`${t('final_score_for_team')} ${b?.label}?`, String(match.score_b))
-    if (bStr === null) return
-    const newA = parseInt(aStr); const newB = parseInt(bStr)
-    if (isNaN(newA) || isNaN(newB) || newA < 0 || newB < 0) { alert(t('enter_valid_numbers')); return }
-    const existingGoals = goals.filter(g => g.match_id === matchId)
-    if (existingGoals.length > 0) {
-      const choice = confirm(`${t('replace_existing_goals')} ${existingGoals.length} ${t('recorded_goals_warn')} (${newA}-${newB})${t('cancel_keep')}`)
-      if (!choice) return
-    }
-    setGoals(prev => prev.filter(g => g.match_id !== matchId))
-    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, score_a: newA, score_b: newB, played: true } : m))
-    try {
-      if (existingGoals.length > 0) await supabase.from('goals').delete().eq('match_id', matchId)
-      const inserts = []
-      for (let i = 0; i < newA; i++) inserts.push({ match_id: matchId, team_id: match.team_a_id, player_id: null })
-      for (let i = 0; i < newB; i++) inserts.push({ match_id: matchId, team_id: match.team_b_id, player_id: null })
-      if (inserts.length > 0) {
-        const { data: inserted } = await supabase.from('goals').insert(inserts).select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
-        if (inserted) setGoals(prev => [...prev.filter(g => g.match_id !== matchId), ...inserted])
-      }
-      await supabase.from('matches').update({ score_a: newA, score_b: newB, played: true }).eq('id', matchId)
+      setGoals(prev => prev.map(g => g.id === tempGoalId ? ig : g))
     } catch (e) { loadAll() }
   }
 
   async function startFirstMatch() {
-    if (!pickA || !pickB) { alert(t('select_two_teams')); return }
-    if (pickA === pickB) { alert(t('select_two_teams')); return }
+    if (!pickA || !pickB || pickA === pickB) { alert(t('select_two_teams')); return }
     const { data, error } = await supabase.from('matches').insert({
       session_id: id, team_a_id: pickA, team_b_id: pickB, match_order: 1, round: 1, score_a: 0, score_b: 0, played: false,
     }).select().single()
@@ -436,44 +416,27 @@ function SessionPage() {
   async function confirmAndAdvance(matchId) {
     const match = matches.find(m => m.id === matchId)
     if (!match) return
-    // Force this match to be "played" even if score is 0-0, so it counts in standings.
     if (!match.played) {
       setMatches(prev => prev.map(m => m.id === matchId ? { ...m, played: true } : m))
       await supabase.from('matches').update({ played: true }).eq('id', matchId)
     }
     const allMatches = [...matches].sort((a,b) => a.match_order - b.match_order)
-    const lastMatch = match
     let nextA, nextB
-
     if (allMatches.length === 1) {
-      const winnerId = lastMatch.score_a > lastMatch.score_b ? lastMatch.team_a_id
-                     : lastMatch.score_b > lastMatch.score_a ? lastMatch.team_b_id
-                     : lastMatch.team_a_id
-      const restingTeam = teams.find(tt => tt.id !== lastMatch.team_a_id && tt.id !== lastMatch.team_b_id)
-      if (!restingTeam) {
-        await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
-        setSession(prev => ({ ...prev, current_match_id: null })); return
-      }
+      const winnerId = match.score_a > match.score_b ? match.team_a_id : match.score_b > match.score_a ? match.team_b_id : match.team_a_id
+      const restingTeam = teams.find(tt => tt.id !== match.team_a_id && tt.id !== match.team_b_id)
+      if (!restingTeam) { await supabase.from('sessions').update({ current_match_id: null }).eq('id', id); setSession(prev => ({ ...prev, current_match_id: null })); return }
       nextA = winnerId; nextB = restingTeam.id
     } else {
       const prev2 = allMatches[allMatches.length - 2]
-      const lastTeams = new Set([lastMatch.team_a_id, lastMatch.team_b_id])
+      const lastTeams = new Set([match.team_a_id, match.team_b_id])
       const prevTeams = new Set([prev2.team_a_id, prev2.team_b_id])
       const staysId = [...lastTeams].find(tid => !prevTeams.has(tid))
       const comesInTeam = teams.find(tt => !lastTeams.has(tt.id))
-      if (!staysId || !comesInTeam) {
-        await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
-        setSession(prev => ({ ...prev, current_match_id: null })); return
-      }
+      if (!staysId || !comesInTeam) { await supabase.from('sessions').update({ current_match_id: null }).eq('id', id); setSession(prev => ({ ...prev, current_match_id: null })); return }
       nextA = staysId; nextB = comesInTeam.id
     }
-
-    if (!nextA || !nextB) {
-      await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
-      setSession(prev => ({ ...prev, current_match_id: null })); return
-    }
-
-    const nextOrder = (lastMatch.match_order || 0) + 1
+    const nextOrder = (match.match_order || 0) + 1
     const { data: newMatch, error } = await supabase.from('matches').insert({
       session_id: id, team_a_id: nextA, team_b_id: nextB, match_order: nextOrder, round: 1, score_a: 0, score_b: 0, played: false,
     }).select().single()
@@ -484,88 +447,66 @@ function SessionPage() {
     setExpandedMatchId(null)
   }
 
-  // OPTIMISTIC delete match
   async function deleteMatch(matchId) {
     if (!confirm(t('confirm_delete_match'))) return
+    const sortedBeforeDelete = [...matches].sort((a,b) => a.match_order - b.match_order)
+    const idx = sortedBeforeDelete.findIndex(m => m.id === matchId)
+    const prevMatch = idx > 0 ? sortedBeforeDelete[idx - 1] : null
     setMatches(prev => prev.filter(m => m.id !== matchId))
     setGoals(prev => prev.filter(g => g.match_id !== matchId))
-    if (session.current_match_id === matchId) {
-      setSession(prev => ({ ...prev, current_match_id: null }))
-      await supabase.from('sessions').update({ current_match_id: null }).eq('id', id)
-    }
-    try { await supabase.from('matches').delete().eq('id', matchId) }
-    catch (e) { loadAll() }
-  }
-
-  // OPTIMISTIC delete goal (kept for legacy callers; not used in UI now since scorer dropdown is hidden)
-  async function deleteGoal(goalId) {
-    if (!confirm(t('confirm_delete_goal'))) return
-    const goal = goals.find(g => g.id === goalId)
-    if (!goal) return
-    const match = matches.find(m => m.id === goal.match_id)
-    const isA = match && match.team_a_id === goal.team_id
-    setGoals(prev => prev.filter(g => g.id !== goalId))
-    if (match) {
-      setMatches(prev => prev.map(m => m.id === match.id ? {
-        ...m,
-        score_a: isA ? Math.max(0, m.score_a - 1) : m.score_a,
-        score_b: !isA ? Math.max(0, m.score_b - 1) : m.score_b,
-      } : m))
-    }
+    // If deleting current match, restore previous as current
+    const newCurrentId = session.current_match_id === matchId ? (prevMatch?.id || null) : session.current_match_id
+    setSession(prev => ({ ...prev, current_match_id: newCurrentId }))
     try {
-      if (!String(goalId).startsWith('temp-')) await supabase.from('goals').delete().eq('id', goalId)
-      if (match) {
-        await supabase.from('matches').update({
-          score_a: isA ? Math.max(0, match.score_a - 1) : match.score_a,
-          score_b: !isA ? Math.max(0, match.score_b - 1) : match.score_b,
-        }).eq('id', goal.match_id)
-      }
+      await supabase.from('matches').delete().eq('id', matchId)
+      await supabase.from('sessions').update({ current_match_id: newCurrentId }).eq('id', id)
     } catch (e) { loadAll() }
   }
 
-  // Change teams in an existing match — resets score to 0-0 and deletes all goals in that match
   async function changeMatchTeams(matchId) {
-    if (!editTeamA || !editTeamB) { alert(t('select_two_teams')); return }
-    if (editTeamA === editTeamB) { alert(t('select_two_teams')); return }
+    if (!editTeamA || !editTeamB || editTeamA === editTeamB) { alert(t('select_two_teams')); return }
     if (!confirm(t('change_teams_warn'))) return
-    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, team_a_id: editTeamA, team_b_id: editTeamB, score_a: 0, score_b: 0, played: false } : m))
+    const match = matches.find(m => m.id === matchId)
+    if (!match) return
+    const scoreA = match.score_a; const scoreB = match.score_b
+    // Keep score, reassign goals to new teams (delete old, insert same count for new teams)
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, team_a_id: editTeamA, team_b_id: editTeamB } : m))
     setGoals(prev => prev.filter(g => g.match_id !== matchId))
     setEditingTeamsForMatch(null); setEditTeamA(''); setEditTeamB('')
     try {
       await supabase.from('goals').delete().eq('match_id', matchId)
-      await supabase.from('matches').update({ team_a_id: editTeamA, team_b_id: editTeamB, score_a: 0, score_b: 0, played: false }).eq('id', matchId)
+      await supabase.from('matches').update({ team_a_id: editTeamA, team_b_id: editTeamB }).eq('id', matchId)
+      const inserts = []
+      for (let i = 0; i < scoreA; i++) inserts.push({ match_id: matchId, team_id: editTeamA, player_id: null })
+      for (let i = 0; i < scoreB; i++) inserts.push({ match_id: matchId, team_id: editTeamB, player_id: null })
+      if (inserts.length > 0) {
+        const { data: inserted } = await supabase.from('goals').insert(inserts).select('*, players!goals_player_id_fkey(name), assist_player:players!goals_assist_player_id_fkey(name)')
+        if (inserted) setGoals(prev => [...prev, ...inserted])
+      }
     } catch (e) { loadAll() }
   }
 
   async function submitSession() {
     if (!confirm(t('confirm_submit_session'))) return
     setSession(prev => ({ ...prev, submitted: true, current_match_id: null }))
-    try { await supabase.from('sessions').update({ submitted: true, current_match_id: null }).eq('id', id) }
-    catch (e) { loadAll() }
+    try { await supabase.from('sessions').update({ submitted: true, current_match_id: null }).eq('id', id) } catch (e) { loadAll() }
   }
   async function reopenSession() {
     if (!confirm(t('confirm_reopen_session'))) return
     setSession(prev => ({ ...prev, submitted: false }))
-    try { await supabase.from('sessions').update({ submitted: false }).eq('id', id) }
-    catch (e) { loadAll() }
+    try { await supabase.from('sessions').update({ submitted: false }).eq('id', id) } catch (e) { loadAll() }
   }
-
   async function renameTeam(teamId, currentLabel) {
     const newLabel = prompt(t('rename_team'), currentLabel)
     if (!newLabel || newLabel.trim() === '' || newLabel.trim() === currentLabel) return
     setTeams(prev => prev.map(tt => tt.id === teamId ? { ...tt, label: newLabel.trim() } : tt))
-    try { await supabase.from('teams').update({ label: newLabel.trim() }).eq('id', teamId) }
-    catch (e) { loadAll() }
+    try { await supabase.from('teams').update({ label: newLabel.trim() }).eq('id', teamId) } catch (e) { loadAll() }
   }
-
   async function toggleVoting() {
     const open = !session.voting_open
-    setSession(prev => ({ ...prev, voting_open: open, voting_opened_at: open ? new Date().toISOString() : prev.voting_opened_at }))
-    try { await supabase.from('sessions').update({ voting_open: open, voting_opened_at: open ? new Date().toISOString() : session.voting_opened_at }).eq('id', id) }
-    catch (e) { loadAll() }
+    setSession(prev => ({ ...prev, voting_open: open }))
+    try { await supabase.from('sessions').update({ voting_open: open, voting_opened_at: open ? new Date().toISOString() : session.voting_opened_at }).eq('id', id) } catch (e) { loadAll() }
   }
-
-  // OPTIMISTIC delete session — navigate away first, then delete in background
   async function deleteSession() {
     if (!confirm(t('confirm_delete_session'))) return
     navigate('/')
@@ -614,8 +555,8 @@ function SessionPage() {
 
   const sessionTabs = [
     { key: 'standings', icon: '🏆', label: t('standings') },
-    { key: 'teams',     icon: '👥', label: t('teams') },
-    { key: 'matches',   icon: '⚽', label: t('matches') },
+    { key: 'teams', icon: '👥', label: t('teams') },
+    { key: 'matches', icon: '⚽', label: t('matches') },
   ]
 
   const sortedMatches = [...matches].sort((a,b) => a.match_order - b.match_order)
@@ -672,9 +613,23 @@ function SessionPage() {
               ? <Link to={`/vote/${id}`} className="inline-block bg-fulda text-white px-4 py-2 rounded-lg font-semibold shadow-sm">{t('open_voting_page')}</Link>
               : <p className="text-sm text-gray-500 dark:text-gray-400">{t('voting_not_open')}</p>}
             {isAdmin && (
-              <div className="mt-3">
+              <div className="mt-3 space-y-3">
                 <button onClick={toggleVoting} className="bg-gray-800 dark:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">{session.voting_open ? t('close_voting') : t('open_voting')}</button>
-                {session.voting_open && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 break-all">{t('share')} <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/vote/{id}</code></p>}
+                {session.voting_open && <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{t('share')} <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/vote/{id}</code></p>}
+                {/* Vote tracker — admin only */}
+                {voteTracker.length > 0 && (
+                  <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">{t('vote_tracker')} — {voteTracker.filter(v=>v.voted).length}/{voteTracker.length}</div>
+                    <div className="divide-y dark:divide-gray-700">
+                      {voteTracker.sort((a,b) => b.voted - a.voted).map(v => (
+                        <div key={v.player_id} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <span>{v.name}</span>
+                          <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>{v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
@@ -763,7 +718,6 @@ function SessionPage() {
               <button onClick={startFirstMatch} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">{t('start_session_matches')}</button>
             </div>
           )}
-
           {matches.length === 0 && teams.length < 2 && (<p className="text-sm text-gray-500 dark:text-gray-400">{t('not_enough_teams')}</p>)}
 
           {sortedMatches.length > 0 && (
@@ -775,14 +729,12 @@ function SessionPage() {
                 const isExpanded = isCurrent || expandedMatchId === m.id
                 const isEditingTeams = editingTeamsForMatch === m.id
 
-                if (!isExpanded) {
-                  return (
-                    <button key={m.id} onClick={() => setExpandedMatchId(m.id)} className="w-full flex justify-between items-center bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                      <span className="text-gray-600 dark:text-gray-300"><span className="text-green-600 dark:text-emerald-400 mr-1">✓</span>Match {m.match_order}: Team {a?.label} vs Team {b?.label}</span>
-                      <span className="font-bold tabular-nums">{m.score_a}–{m.score_b}</span>
-                    </button>
-                  )
-                }
+                if (!isExpanded) return (
+                  <button key={m.id} onClick={() => setExpandedMatchId(m.id)} className="w-full flex justify-between items-center bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    <span className="text-gray-600 dark:text-gray-300"><span className="text-green-600 dark:text-emerald-400 mr-1">✓</span>Match {m.match_order}: Team {a?.label} vs Team {b?.label}</span>
+                    <span className="font-bold tabular-nums">{m.score_a}–{m.score_b}</span>
+                  </button>
+                )
 
                 return (
                   <div key={m.id} className={`border rounded-lg p-3 ${isCurrent ? 'border-fulda bg-white dark:bg-gray-900 shadow-md' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
@@ -794,22 +746,14 @@ function SessionPage() {
                         {isAdmin && editable && <button onClick={() => deleteMatch(m.id)} className="text-red-500 text-xs">❌</button>}
                       </div>
                     </div>
-
                     {isAdmin && editable && (
                       <div className="grid grid-cols-2 gap-3">
                         <button onClick={() => addGoal(m.id, m.team_a_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {a?.label}</button>
                         <button onClick={() => addGoal(m.id, m.team_b_id)} className="w-full bg-fulda text-white font-bold text-base py-4 rounded-lg shadow-sm active:scale-95 transition">+1 {b?.label}</button>
                       </div>
                     )}
-
-                    {isAdmin && editable && (
-                      <button onClick={() => setFinalScore(m.id)} className="w-full mt-3 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">{t('set_final_score')}</button>
-                    )}
-
-                    {/* Change teams */}
                     {isAdmin && editable && !isEditingTeams && (
-                      <button
-                        onClick={() => { setEditingTeamsForMatch(m.id); setEditTeamA(m.team_a_id); setEditTeamB(m.team_b_id) }}
+                      <button onClick={() => { setEditingTeamsForMatch(m.id); setEditTeamA(m.team_a_id); setEditTeamB(m.team_b_id) }}
                         className="w-full mt-2 text-xs border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold">
                         🔄 {t('change_teams')}
                       </button>
@@ -830,7 +774,6 @@ function SessionPage() {
                         </div>
                       </div>
                     )}
-
                     {isAdmin && isCurrent && editable && (
                       <button onClick={() => confirmAndAdvance(m.id)} className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">✓ {t('submit_score')} → {t('next_match')}</button>
                     )}
@@ -880,17 +823,13 @@ function PlayersPage() {
       const { data, error } = await supabase.from('players').insert({ name: optimistic.name }).select().single()
       if (error) throw error
       setPlayers(prev => prev.map(p => p.id === tempId ? data : p).sort((a,b) => a.name.localeCompare(b.name)))
-    } catch (e) {
-      setPlayers(prev => prev.filter(p => p.id !== tempId))
-      alert(e.message || 'Error')
-    }
+    } catch (e) { setPlayers(prev => prev.filter(p => p.id !== tempId)); alert(e.message || 'Error') }
   }
   async function del(e, idToDelete) {
     e.preventDefault(); e.stopPropagation()
     if (!confirm(t('confirm_delete_player'))) return
     setPlayers(prev => prev.filter(p => p.id !== idToDelete))
-    try { await supabase.from('players').delete().eq('id', idToDelete) }
-    catch (e) { load() }
+    try { await supabase.from('players').delete().eq('id', idToDelete) } catch (e) { load() }
   }
   return (
     <div>
@@ -939,8 +878,7 @@ function PlayerProfilePage() {
     const newName = prompt(t('rename_player'), player.name)
     if (!newName || newName.trim() === '' || newName.trim() === player.name) return
     setPlayer(prev => ({ ...prev, name: newName.trim() }))
-    try { await supabase.from('players').update({ name: newName.trim() }).eq('id', id) }
-    catch (e) { load() }
+    try { await supabase.from('players').update({ name: newName.trim() }).eq('id', id) } catch (e) { load() }
   }
   async function del() {
     if (!confirm(t('confirm_delete_player'))) return
@@ -977,26 +915,51 @@ function PlayerProfilePage() {
   )
 }
 
+// =================== VOTE PAGE (fully reworked) ===================
 function VotePage() {
   const { sessionId } = useParams()
   const { t } = useT()
   const [session, setSession] = useState(null)
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState([]) // players assigned to this session
+  const [allVotedPlayerIds, setAllVotedPlayerIds] = useState(new Set()) // player_ids who already voted
+  const [selectedPlayerId, setSelectedPlayerId] = useState('') // "who are you"
+  const [existingVotes, setExistingVotes] = useState(null) // null = not voted, [] = voted
   const [votes, setVotes] = useState({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
-  const [submitted, setSubmitted] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [results, setResults] = useState({})
-  const fingerprint = getFingerprint()
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => { load() }, [sessionId])
+
   async function load() {
+    setLoading(true)
     const { data: s } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
     setSession(s)
     const { data: tp } = await supabase.from('team_players').select('players(*), teams!inner(session_id)').eq('teams.session_id', sessionId)
-    const uniq = {}; (tp || []).forEach(tt => { if (tt.players) uniq[tt.players.id] = tt.players })
-    setPlayers(Object.values(uniq))
-    const { data: existing } = await supabase.from('votes').select('*').eq('session_id', sessionId).eq('voter_fingerprint', fingerprint)
-    if (existing && existing.length) setSubmitted(true)
+    const uniq = {}; (tp || []).forEach(x => { if (x.players) uniq[x.players.id] = x.players })
+    setPlayers(Object.values(uniq).sort((a,b) => a.name.localeCompare(b.name)))
+    // Get all player IDs who already voted (for greying out in "who are you" dropdown)
+    const { data: allVotes } = await supabase.from('votes').select('voter_player_id').eq('session_id', sessionId).not('voter_player_id', 'is', null)
+    setAllVotedPlayerIds(new Set((allVotes || []).map(v => v.voter_player_id)))
     loadResults()
+    setLoading(false)
   }
+
+  async function checkAndLoadExistingVotes(playerId) {
+    if (!playerId) { setExistingVotes(null); return }
+    const { data } = await supabase.from('votes').select('*').eq('session_id', sessionId).eq('voter_player_id', playerId)
+    if (data && data.length > 0) {
+      setExistingVotes(data)
+      // Pre-fill vote state with existing votes for editing
+      const v = { best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' }
+      data.forEach(vote => { if (v.hasOwnProperty(vote.category)) v[vote.category] = vote.player_id })
+      setVotes(v)
+    } else {
+      setExistingVotes([])
+      setVotes({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
+    }
+  }
+
   async function loadResults() {
     const { data } = await supabase.from('votes').select('*, players(name)').eq('session_id', sessionId)
     const r = {}
@@ -1007,32 +970,88 @@ function VotePage() {
     })
     setResults(r)
   }
+
   async function submit() {
+    if (!selectedPlayerId) { alert(t('who_are_you')); return }
     const inserts = []
     for (const cat of ['best_player', 'best_goalkeeper', 'best_defender', 'best_goal', 'pepe_award']) {
-      if (votes[cat]) inserts.push({ session_id: sessionId, category: cat, player_id: votes[cat], voter_fingerprint: fingerprint })
+      if (votes[cat]) inserts.push({ session_id: sessionId, category: cat, player_id: votes[cat], voter_player_id: selectedPlayerId })
     }
-    if (inserts.length === 0) { alert('Select at least one'); return }
+    if (inserts.length === 0) { alert('Select at least one category'); return }
+    // Delete existing votes for this player then re-insert (handles both new vote and edit)
+    await supabase.from('votes').delete().eq('session_id', sessionId).eq('voter_player_id', selectedPlayerId)
     const { error } = await supabase.from('votes').insert(inserts)
     if (error) { alert(error.message); return }
-    setSubmitted(true); loadResults()
+    setExistingVotes(inserts)
+    setEditing(false)
+    setAllVotedPlayerIds(prev => new Set([...prev, selectedPlayerId]))
+    loadResults()
   }
-  if (!session) return <p>{t('loading')}</p>
-  if (!session.voting_open) return <p>{t('voting_not_open_session')}</p>
+
+  if (loading) return <p className="p-4">{t('loading')}</p>
+  if (!session) return <p className="p-4">{t('session_not_found')}</p>
+  if (!session.voting_open) return <p className="p-4">{t('voting_not_open_session')}</p>
+
   const byCat = (cat) => Object.values(results).filter(r => r.category === cat).sort((a,b) => b.count - a.count)
+  const hasVoted = existingVotes && existingVotes.length > 0
+  const showForm = !hasVoted || editing
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-lg mx-auto px-4 py-5">
       <h1 className="text-2xl font-bold">{t('vote')} — {session.name || session.date}</h1>
-      {!submitted ? (
-        <div className="space-y-3">
-          <VoteSection title={t('best_player')} players={players} value={votes.best_player} onChange={v => setVotes({...votes, best_player: v})} />
-          <VoteSection title={t('best_keeper')} players={players} value={votes.best_goalkeeper} onChange={v => setVotes({...votes, best_goalkeeper: v})} />
-          <VoteSection title={t('best_defender')} players={players} value={votes.best_defender} onChange={v => setVotes({...votes, best_defender: v})} />
-          <VoteSection title={t('best_goal')} players={players} value={votes.best_goal} onChange={v => setVotes({...votes, best_goal: v})} hint={t('choose_fav_goal')} />
-          <VoteSection title={t('pepe_award')} players={players} value={votes.pepe_award} onChange={v => setVotes({...votes, pepe_award: v})} hint={t('pepe_hint')} />
-          <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">{t('submit_vote')}</button>
+
+      {/* Step 1: Who are you? */}
+      {!selectedPlayerId ? (
+        <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-5 shadow-sm space-y-3">
+          <h2 className="font-bold text-lg">{t('who_are_you')}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('anonymous_note')}</p>
+          <select
+            value={selectedPlayerId}
+            onChange={e => { setSelectedPlayerId(e.target.value); checkAndLoadExistingVotes(e.target.value) }}
+            className="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-3 text-base"
+          >
+            <option value="">{t('select_yourself')}</option>
+            {players.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}{allVotedPlayerIds.has(p.id) ? ` — ${t('already_voted')}` : ''}
+              </option>
+            ))}
+          </select>
         </div>
-      ) : <p className="text-fulda dark:text-emerald-400 font-semibold">{t('thanks_voting')}</p>}
+      ) : (
+        <>
+          {/* Identity confirmed bar */}
+          <div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2">
+            <span className="text-sm font-semibold text-fulda dark:text-emerald-400">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
+            <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 dark:text-gray-400 underline">{t('back')}</button>
+          </div>
+
+          {/* Already voted message */}
+          {hasVoted && !editing && (
+            <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm text-center space-y-3">
+              <p className="text-fulda dark:text-emerald-400 font-semibold">{t('thanks_voting')}</p>
+              <button onClick={() => setEditing(true)} className="text-sm border border-fulda text-fulda dark:text-emerald-400 px-4 py-2 rounded-lg font-semibold">{t('edit_vote')}</button>
+            </div>
+          )}
+
+          {/* Vote form */}
+          {showForm && (
+            <div className="space-y-3">
+              <VoteSection title={t('best_player')} players={players} value={votes.best_player} onChange={v => setVotes({...votes, best_player: v})} />
+              <VoteSection title={t('best_keeper')} players={players} value={votes.best_goalkeeper} onChange={v => setVotes({...votes, best_goalkeeper: v})} />
+              <VoteSection title={t('best_defender')} players={players} value={votes.best_defender} onChange={v => setVotes({...votes, best_defender: v})} />
+              <VoteSection title={t('best_goal')} players={players} value={votes.best_goal} onChange={v => setVotes({...votes, best_goal: v})} hint={t('choose_fav_goal')} />
+              <VoteSection title={t('pepe_award')} players={players} value={votes.pepe_award} onChange={v => setVotes({...votes, pepe_award: v})} hint={t('pepe_hint')} />
+              <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm">
+                {editing ? t('update_vote') : t('submit_vote')}
+              </button>
+              {editing && <button onClick={() => setEditing(false)} className="w-full text-sm text-gray-500 dark:text-gray-400 py-2">{t('back')}</button>}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Results */}
       <div className="space-y-3">
         {[['best_player', t('best_player')], ['best_goalkeeper', t('best_keeper')], ['best_defender', t('best_defender')], ['best_goal', t('best_goal')], ['pepe_award', t('pepe_award')]].map(([cat,label]) => {
           const list = byCat(cat)
@@ -1063,12 +1082,6 @@ function VoteSection({ title, players, value, onChange, hint }) {
   )
 }
 
-function getFingerprint() {
-  let f = localStorage.getItem('voter_fp')
-  if (!f) { f = crypto.randomUUID(); localStorage.setItem('voter_fp', f) }
-  return f
-}
-
 function LeaderboardPage() {
   const { t } = useT()
   const { theme } = useTheme()
@@ -1097,9 +1110,9 @@ function LeaderboardPage() {
     await countCat('pepe_award', setPepeAwards)
     const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
-    const goalCountBySessionId = {}
-    ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) goalCountBySessionId[sid] = (goalCountBySessionId[sid] || 0) + 1 })
-    setGoalsBySession((sessionsData || []).map(s => ({ label: s.date, goals: goalCountBySessionId[s.id] || 0 })))
+    const gc = {}
+    ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) gc[sid] = (gc[sid] || 0) + 1 })
+    setGoalsBySession((sessionsData || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
     setLoading(false)
   }
   const Section = ({ title, list }) => (
