@@ -236,9 +236,9 @@ function Layout({ children }) {
           <div className="flex items-center gap-3 min-w-0">
             {inSession && (<button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">{t('back')}</button>)}
             <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <span className="bg-white rounded-md px-2 py-1.5 shrink-0 shadow-sm">
-                <img src={HS_LOGO} alt="Hochschule Fulda" className="h-6 w-auto block" />
-              </span>
+<span className="bg-white rounded-md p-1 shrink-0 shadow-sm">
+  <img src="/icon-192.png" alt="Futsal Kurs" className="h-8 w-8 object-cover rounded" />
+</span>
               <span className="text-lg font-bold truncate">Futsal Kurs</span>
             </Link>
           </div>
