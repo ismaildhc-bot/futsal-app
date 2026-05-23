@@ -3,7 +3,7 @@ import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { supabase } from './supabase.js'
 
-const HS_LOGO = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
+const HS_LOGO = '/hsfulda-logo.png'
 const APP_ICON = '/icon-512.png'
 
 const translations = {
@@ -149,22 +149,7 @@ function LiveBadge() {
 function TriLeafWatermark() {
   return (
     <div className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden" aria-hidden="true">
-      <svg viewBox="0 0 200 200" width="280" height="280" className="opacity-[0.04] dark:opacity-[0.07]">
-        <g fill="#00A859">
-          {/* Center leaf */}
-          <ellipse cx="100" cy="75" rx="22" ry="45" transform="rotate(0 100 100)" />
-          {/* Left leaf */}
-          <ellipse cx="100" cy="75" rx="22" ry="45" transform="rotate(-40 100 100)" />
-          {/* Right leaf */}
-          <ellipse cx="100" cy="75" rx="22" ry="45" transform="rotate(40 100 100)" />
-          {/* Stem */}
-          <rect x="97" y="120" width="6" height="40" rx="3" />
-          {/* Roots */}
-          <path d="M100 160 Q80 170 65 180" stroke="#00A859" strokeWidth="5" fill="none" strokeLinecap="round"/>
-          <path d="M100 160 Q120 170 135 180" stroke="#00A859" strokeWidth="5" fill="none" strokeLinecap="round"/>
-          <path d="M100 165 Q100 175 100 185" stroke="#00A859" strokeWidth="5" fill="none" strokeLinecap="round"/>
-        </g>
-      </svg>
+      <img src="/hsfulda-logo.png" alt="" className="w-80 opacity-[0.05] dark:opacity-[0.08]" />
     </div>
   )
 }
@@ -206,7 +191,7 @@ function Layout({ children }) {
           <div className="flex items-center gap-2 min-w-0">
             {inSession && (<button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">{t('back')}</button>)}
             <Link to="/" className="flex items-center gap-2 min-w-0">
-              <img src={HS_LOGO} alt="HS Fulda" className="h-7 w-auto shrink-0 brightness-0 invert" />
+<img src={HS_LOGO} alt="HS Fulda" className="h-9 w-9 shrink-0 rounded-full bg-white p-0.5" />
               <img src={APP_ICON} alt="Futsal Kurs" className="h-9 w-9 rounded-xl object-cover shrink-0 shadow-sm" onError={e => e.target.style.display='none'} />
             </Link>
           </div>
@@ -950,7 +935,7 @@ function VotePage() {
     for (const cat of ['best_player', 'best_goalkeeper', 'best_defender', 'best_goal', 'pepe_award']) {
       if (!votes[cat]) continue
       // Block self-voting
-      if (votes[cat] === selectedPlayerId) { alert(t('cannot_vote_yourself')); return }
+
       inserts.push({ session_id: sessionId, category: cat, player_id: votes[cat], voter_player_id: selectedPlayerId })
     }
     if (inserts.length === 0) { alert('Select at least one category'); return }
@@ -1005,11 +990,11 @@ function VotePage() {
           {showForm && (
             <div className="space-y-3">
               {/* Pass selectedPlayerId to filter out self from each category */}
-              <VoteSection title={t('best_player')} players={players} value={votes.best_player} onChange={v => setVotes({...votes, best_player: v})} excludeId={selectedPlayerId} />
-              <VoteSection title={t('best_keeper')} players={players} value={votes.best_goalkeeper} onChange={v => setVotes({...votes, best_goalkeeper: v})} excludeId={selectedPlayerId} />
-              <VoteSection title={t('best_defender')} players={players} value={votes.best_defender} onChange={v => setVotes({...votes, best_defender: v})} excludeId={selectedPlayerId} />
-              <VoteSection title={t('best_goal')} players={players} value={votes.best_goal} onChange={v => setVotes({...votes, best_goal: v})} hint={t('choose_fav_goal')} excludeId={selectedPlayerId} />
-              <VoteSection title={t('pepe_award')} players={players} value={votes.pepe_award} onChange={v => setVotes({...votes, pepe_award: v})} hint={t('pepe_hint')} excludeId={selectedPlayerId} />
+              <VoteSection title={t('best_player')} players={players} value={votes.best_player} onChange={v => setVotes({...votes, best_player: v})} />
+              <VoteSection title={t('best_keeper')} players={players} value={votes.best_goalkeeper} onChange={v => setVotes({...votes, best_goalkeeper: v})} />
+              <VoteSection title={t('best_defender')} players={players} value={votes.best_defender} onChange={v => setVotes({...votes, best_defender: v})} />
+              <VoteSection title={t('best_goal')} players={players} value={votes.best_goal} onChange={v => setVotes({...votes, best_goal: v})} hint={t('choose_fav_goal')} />
+              <VoteSection title={t('pepe_award')} players={players} value={votes.pepe_award} onChange={v => setVotes({...votes, pepe_award: v})} hint={t('pepe_hint')} />
               <button onClick={submit} className="w-full bg-fulda text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">
                 {editing ? t('update_vote') : t('submit_vote')}
               </button>
