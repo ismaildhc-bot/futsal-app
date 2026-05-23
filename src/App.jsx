@@ -52,6 +52,8 @@ const translations = {
     vote_tracker: 'Vote tracker', voted: 'Voted', not_voted: 'Not voted yet',
     anonymous_note: 'Your vote is anonymous — your name is only used to prevent double voting.',
     update_vote: 'Update vote', cancel: 'Cancel',
+    cancel_my_vote: 'Cancel my vote',
+    confirm_cancel_vote: 'Delete all your votes for this session?',
     cannot_vote_yourself: 'You cannot vote for yourself.',
     copyright_text: 'Used privately for the Futsal course at Hochschule Fulda. Non-commercial.',
     contact: 'Contact',
@@ -101,6 +103,8 @@ const translations = {
     vote_tracker: 'Abstimmungs-Übersicht', voted: 'Abgestimmt', not_voted: 'Noch nicht abgestimmt',
     anonymous_note: 'Deine Stimme ist anonym — der Name wird nur zur Verhinderung doppelter Abstimmungen verwendet.',
     update_vote: 'Stimme aktualisieren', cancel: 'Abbrechen',
+    cancel_my_vote: 'Stimme löschen',
+    confirm_cancel_vote: 'Alle deine Stimmen für diesen Termin löschen?',
     cannot_vote_yourself: 'Du kannst nicht für dich selbst stimmen.',
     copyright_text: 'Privat genutzt für den Futsal-Kurs der Hochschule Fulda. Nicht-kommerziell.',
     contact: 'Kontakt',
@@ -929,6 +933,16 @@ function VotePage() {
     setResults(r)
   }
 
+  async function cancelMyVote() {
+    if (!selectedPlayerId) return
+    if (!confirm(t('confirm_cancel_vote'))) return
+    await supabase.from('votes').delete().eq('session_id', sessionId).eq('voter_player_id', selectedPlayerId)
+    setExistingVotes([])
+    setVotes({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
+    setEditing(false)
+    setAllVotedPlayerIds(prev => { const s = new Set(prev); s.delete(selectedPlayerId); return s })
+    loadResults()
+  }
   async function submit() {
     if (!selectedPlayerId) { alert(t('who_are_you')); return }
     const inserts = []
@@ -975,9 +989,14 @@ function VotePage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2">
-            <span className="text-sm font-semibold text-fulda dark:text-emerald-400">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
-            <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 underline">{t('back')}</button>
+<div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2 gap-2">
+            <span className="text-sm font-semibold text-fulda dark:text-emerald-400 truncate">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
+            <div className="flex gap-2 shrink-0">
+              {hasVoted && (
+                <button onClick={cancelMyVote} className="text-xs bg-red-500 text-white px-2 py-1 rounded font-semibold">🗑 {t('cancel_my_vote')}</button>
+              )}
+              <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 underline">{t('back')}</button>
+            </div>
           </div>
 
           {hasVoted && !editing && (
