@@ -251,10 +251,8 @@ function Layout({ children }) {
               </span>
             </Link>
           </div>
-          <Link to="/" className="shrink-0">
-            <span className="bg-white rounded-md p-1 shrink-0 shadow-sm block">
-              <img src={APP_ICON} alt="Futsal Kurs" className="h-9 w-9 object-cover rounded" />
-            </span>
+<Link to="/" className="shrink-0">
+            <img src={APP_ICON} alt="Futsal Kurs" className="h-11 w-11 object-cover rounded-lg shadow-sm" />
           </Link>
           <div className="flex items-center gap-1.5 shrink-0 flex-1 justify-end">
             <button onClick={() => setLang(lang === 'en' ? 'de' : 'en')} className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-2 py-1 rounded">{lang === 'en' ? 'DE' : 'EN'}</button>
