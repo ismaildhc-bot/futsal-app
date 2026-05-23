@@ -307,6 +307,8 @@ function SessionPage() {
   const [editTeamA, setEditTeamA] = useState('')
   const [editTeamB, setEditTeamB] = useState('')
   const [voteTracker, setVoteTracker] = useState([])
+  const [adminVoteDetails, setAdminVoteDetails] = useState({})
+  const [expandedVoter, setExpandedVoter] = useState(null)
 
   useEffect(() => { loadAll() }, [id])
 
@@ -326,13 +328,20 @@ function SessionPage() {
     if (sRes.data) loadVoteTracker(tpRes.data || [])
   }
 
-  async function loadVoteTracker(tp) {
+async function loadVoteTracker(tp) {
     const uniqPlayers = {}
     ;(tp || []).forEach(x => { if (x.players) uniqPlayers[x.players.id] = x.players.name })
     if (Object.keys(uniqPlayers).length === 0) return
-    const { data: votes } = await supabase.from('votes').select('voter_player_id').eq('session_id', id).not('voter_player_id', 'is', null)
+    const { data: votes } = await supabase.from('votes').select('voter_player_id, category, player_id, players(name)').eq('session_id', id).not('voter_player_id', 'is', null)
     const votedIds = new Set((votes || []).map(v => v.voter_player_id))
     setVoteTracker(Object.entries(uniqPlayers).map(([pid, name]) => ({ player_id: pid, name, voted: votedIds.has(pid) })))
+    // Build per-voter detail map for admin expand
+    const detail = {}
+    ;(votes || []).forEach(v => {
+      if (!detail[v.voter_player_id]) detail[v.voter_player_id] = []
+      detail[v.voter_player_id].push({ category: v.category, player_name: v.players?.name || '?' })
+    })
+    setAdminVoteDetails(detail)
   }
 
   async function assignPlayer(playerId, teamId) {
@@ -581,20 +590,39 @@ function SessionPage() {
                   {session.voting_open ? t('close_voting') : t('open_voting')}
                 </button>
                 {session.voting_open && <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{t('share')} <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/vote/{id}</code></p>}
-                {voteTracker.length > 0 && (
+{voteTracker.length > 0 && (
                   <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
                     <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
                       {t('vote_tracker')} — {voteTracker.filter(v=>v.voted).length}/{voteTracker.length}
                     </div>
                     <div className="divide-y dark:divide-gray-700">
-                      {[...voteTracker].sort((a,b) => b.voted - a.voted).map(v => (
-                        <div key={v.player_id} className="flex items-center justify-between px-3 py-2 text-sm">
-                          <span>{v.name}</span>
-                          <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>
-                            {v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}
-                          </span>
-                        </div>
-                      ))}
+                      {[...voteTracker].sort((a,b) => b.voted - a.voted).map(v => {
+                        const myVotes = adminVoteDetails[v.player_id] || []
+                        const isExpanded = expandedVoter === v.player_id
+                        return (
+                          <div key={v.player_id} className="text-sm">
+                            <div className="flex items-center justify-between px-3 py-2">
+                              <span className="flex items-center gap-2">
+                                {v.voted && <button onClick={() => setExpandedVoter(isExpanded ? null : v.player_id)} className="text-fulda dark:text-emerald-400 text-xs">{isExpanded ? '▼' : '▶'}</button>}
+                                {v.name}
+                              </span>
+                              <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>
+                                {v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}
+                              </span>
+                            </div>
+                            {isExpanded && myVotes.length > 0 && (
+                              <div className="bg-gray-50 dark:bg-gray-800 px-6 py-2 text-xs space-y-1">
+                                {myVotes.map((mv, i) => (
+                                  <div key={i} className="flex justify-between">
+                                    <span className="text-gray-500 dark:text-gray-400">{t(mv.category === 'best_player' ? 'best_player' : mv.category === 'best_goalkeeper' ? 'best_keeper' : mv.category === 'best_defender' ? 'best_defender' : mv.category === 'best_goal' ? 'best_goal' : 'pepe_award')}</span>
+                                    <span className="font-semibold">→ {mv.player_name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
