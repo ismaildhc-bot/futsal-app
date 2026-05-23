@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts'
 import { supabase } from './supabase.js'
 
 const HS_LOGO = '/hsfulda-logo.png'
@@ -1167,14 +1167,17 @@ function LeaderboardPage() {
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold mb-3">{t('goals_per_session')}</h3>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={goalsBySession} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+<ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={goalsBySession} margin={{ top: 20, right: 10, left: -10, bottom: 0 }} barCategoryGap="35%">
                 <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#e5e7eb'} />
                 <XAxis dataKey="label" stroke={axisColor} tick={{ fontSize: 10 }} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: theme === 'dark' ? '#111827' : '#fff', border: '1px solid #00A859', borderRadius: 8 }} />
-                <Bar dataKey="goals" fill="#00A859" radius={[4,4,0,0]} />
-              </BarChart>
+                <Bar dataKey="goals" fill="#00A859" radius={[4,4,0,0]} maxBarSize={50}>
+                  <LabelList dataKey="goals" position="top" fill={axisColor} fontSize={11} fontWeight="bold" />
+                </Bar>
+                <Line type="monotone" dataKey="goals" stroke="#dc2626" strokeWidth={2} dot={{ r: 3, fill: '#dc2626' }} />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>
