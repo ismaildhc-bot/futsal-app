@@ -3,7 +3,8 @@ import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts'
 import { supabase } from './supabase.js'
 
-const HS_LOGO = 'https://www.hs-fulda.de/assets/images/hs-fulda_logo_2024.svg'
+const HS_LOGO = '/hsfulda-logo.png'
+const APP_ICON = '/icon-192.png'
 
 const translations = {
   en: {
@@ -28,11 +29,11 @@ const translations = {
     no_players_team: 'No players yet',
     remove: 'remove', no_data: 'No data yet.',
     season_lb: 'Season Leaderboard',
-    best_player_wins: '🏆 Best Player of the Session',
-    best_keeper_wins: '🧤 Best Goalkeeper of the Session',
-    best_defender_wins: '🛡 Best Defender of the Session',
-    best_goal_wins: '⚽ Best Goal of the Session',
-    pepe_wins: '🪓 Pepe Award of the Session',
+    best_player_session: '🏆 Best Player of the Session',
+    best_keeper_session: '🧤 Best Goalkeeper of the Session',
+    best_defender_session: '🛡 Best Defender of the Session',
+    best_goal_session: '⚽ Best Goal of the Session',
+    pepe_session: '🪓 Pepe Award of the Session',
     goals_per_session: '📈 Goals per session',
     add_player: 'Player name', add: 'Add', no_players: 'No players yet.',
     admin_login: 'Admin Login', email: 'Email', password: 'Password',
@@ -81,8 +82,9 @@ const translations = {
     not_voted: 'Not voted yet',
     anonymous_note: 'Your vote is anonymous — your name is only used to prevent double voting.',
     update_vote: 'Update vote',
-    cancel_my_vote: 'Cancel my vote',
-    confirm_cancel_vote: 'Delete all your votes for this session?',
+    footer_copyright: '© Hochschule Fulda — Futsal Kurs',
+    footer_contact: 'Contact: ismail.elhathout@gmx.de',
+    footer_disclaimer: 'Non-commercial internal course app. Not affiliated with HS Fulda administration.',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
@@ -106,11 +108,11 @@ const translations = {
     no_players_team: 'Noch keine Spieler',
     remove: 'entfernen', no_data: 'Noch keine Daten.',
     season_lb: 'Saison-Bestenliste',
-    best_player_wins: '🏆 Bester Spieler des Termins',
-    best_keeper_wins: '🧤 Bester Torwart des Termins',
-    best_defender_wins: '🛡 Bester Verteidiger des Termins',
-    best_goal_wins: '⚽ Bestes Tor des Termins',
-    pepe_wins: '🪓 Pepe-Preis des Termins',
+    best_player_session: '🏆 Bester Spieler des Termins',
+    best_keeper_session: '🧤 Bester Torwart des Termins',
+    best_defender_session: '🛡 Bester Verteidiger des Termins',
+    best_goal_session: '⚽ Bestes Tor des Termins',
+    pepe_session: '🪓 Pepe-Preis des Termins',
     goals_per_session: '📈 Tore pro Termin',
     add_player: 'Spielername', add: 'Hinzufügen', no_players: 'Noch keine Spieler.',
     admin_login: 'Admin-Login', email: 'E-Mail', password: 'Passwort',
@@ -159,8 +161,9 @@ const translations = {
     not_voted: 'Noch nicht abgestimmt',
     anonymous_note: 'Deine Stimme ist anonym — der Name wird nur zur Verhinderung doppelter Abstimmungen verwendet.',
     update_vote: 'Stimme aktualisieren',
-    cancel_my_vote: 'Stimme löschen',
-    confirm_cancel_vote: 'Alle deine Stimmen für diesen Termin löschen?',
+    footer_copyright: '© Hochschule Fulda — Futsal Kurs',
+    footer_contact: 'Kontakt: ismail.elhathout@gmx.de',
+    footer_disclaimer: 'Nicht-kommerzielle interne Kurs-App. Nicht mit der HS Fulda Verwaltung verbunden.',
   },
 }
 
@@ -230,25 +233,30 @@ function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const inSession = !!location.pathname.match(/^\/session\/([^/]+)/)
+  const isHome = location.pathname === '/'
   const topNav = [
     { to: '/', icon: '🏠', label: t('sessions'), active: location.pathname === '/' },
     { to: '/players', icon: '👥', label: t('players'), active: location.pathname.startsWith('/players') || location.pathname.startsWith('/player/') },
     { to: '/leaderboard', icon: '⭐', label: t('leaderboard'), active: location.pathname === '/leaderboard' },
   ]
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-24 transition-colors">
-      <header className="bg-fulda dark:bg-emerald-900 text-white shadow">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 pb-28 transition-colors relative">
+      <header className="sticky top-0 z-40 bg-fulda dark:bg-emerald-900 text-white shadow">
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {inSession && (<button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">{t('back')}</button>)}
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
+            <Link to="/" className="flex items-center gap-2 min-w-0">
               <span className="bg-white rounded-md p-1 shrink-0 shadow-sm">
-                <img src="/icon-192.png" alt="Futsal Kurs" className="h-8 w-8 object-cover rounded" />
+                <img src={HS_LOGO} alt="HS Fulda" className="h-9 w-9 object-contain" />
               </span>
-              <span className="text-lg font-bold truncate">Futsal Kurs</span>
             </Link>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <Link to="/" className="shrink-0">
+            <span className="bg-white rounded-md p-1 shrink-0 shadow-sm block">
+              <img src={APP_ICON} alt="Futsal Kurs" className="h-9 w-9 object-cover rounded" />
+            </span>
+          </Link>
+          <div className="flex items-center gap-1.5 shrink-0 flex-1 justify-end">
             <button onClick={() => setLang(lang === 'en' ? 'de' : 'en')} className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-2 py-1 rounded">{lang === 'en' ? 'DE' : 'EN'}</button>
             <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="bg-white/15 hover:bg-white/25 text-white text-xs px-2 py-1 rounded">{theme === 'dark' ? '☀️' : '🌙'}</button>
             {isAdmin
@@ -257,9 +265,19 @@ function Layout({ children }) {
           </div>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-5">{children}</main>
+
+      {/* Watermark — tri-leaf HS Fulda logo, faint, behind content, only on home page */}
+      {isHome && (
+        <div className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden" aria-hidden="true">
+          <img src={HS_LOGO} alt="" className="w-80 max-w-[70%] opacity-[0.05] dark:opacity-[0.07]" />
+        </div>
+      )}
+
+      <main className="max-w-3xl mx-auto px-4 py-5 relative z-10">{children}</main>
+
       {!inSession && (
-        <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg"
+             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="max-w-3xl mx-auto grid grid-cols-3">
             {topNav.map(item => (
               <Link key={item.to} to={item.to} className={`flex flex-col items-center py-2.5 transition ${item.active ? 'text-fulda dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -271,6 +289,17 @@ function Layout({ children }) {
         </nav>
       )}
     </div>
+  )
+}
+
+function CopyrightFooter() {
+  const { t } = useT()
+  return (
+    <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
+      <p className="font-semibold">{t('footer_copyright')}</p>
+      <p>{t('footer_contact')}</p>
+      <p className="italic text-[11px] max-w-md mx-auto">{t('footer_disclaimer')}</p>
+    </footer>
   )
 }
 
@@ -323,6 +352,7 @@ function HomePage() {
           )
         })}
       </div>
+      <CopyrightFooter />
     </div>
   )
 }
@@ -365,7 +395,7 @@ function SessionPage() {
     setSession(sRes.data); setTeams(tRes.data || []); setAllPlayers(pRes.data || [])
     setTeamPlayers(tpRes.data || []); setMatches(mRes.data || []); setGoals(gRes.data || [])
     setLoading(false)
-    if (sRes.data) loadVoteTracker(tpRes.data || [])
+    if (sRes.data?.voting_open || sRes.data?.submitted) loadVoteTracker(tpRes.data || [])
   }
 
   async function loadVoteTracker(tp) {
@@ -573,7 +603,7 @@ function SessionPage() {
   const sortedMatches = [...matches].sort((a,b) => a.match_order - b.match_order)
   const currentMatchId = session.current_match_id
 
-  const catLabel = (c) => c === 'best_player' ? t('best_player') : c === 'best_goalkeeper' ? t('best_keeper') : c === 'best_defender' ? t('best_defender') : c === 'best_goal' ? t('best_goal') : t('pepe_award')
+  const catLabel = (cat) => cat === 'best_player' ? t('best_player') : cat === 'best_goalkeeper' ? t('best_keeper') : cat === 'best_defender' ? t('best_defender') : cat === 'best_goal' ? t('best_goal') : t('pepe_award')
 
   return (
     <div className="space-y-5 pb-20">
@@ -633,21 +663,24 @@ function SessionPage() {
                   <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
                     <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">{t('vote_tracker')} — {voteTracker.filter(v=>v.voted).length}/{voteTracker.length}</div>
                     <div className="divide-y dark:divide-gray-700">
-                      {[...voteTracker].sort((a,b) => b.voted - a.voted).map(v => {
-                        const myVotes = adminVoteDetails[v.player_id] || []
+                      {voteTracker.sort((a,b) => b.voted - a.voted).map(v => {
                         const isExpanded = expandedVoter === v.player_id
+                        const details = adminVoteDetails[v.player_id] || []
                         return (
-                          <div key={v.player_id} className="text-sm">
-                            <div className="flex items-center justify-between px-3 py-2">
+                          <div key={v.player_id}>
+                            <button
+                              onClick={() => v.voted && setExpandedVoter(isExpanded ? null : v.player_id)}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-sm ${v.voted ? 'hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer' : 'cursor-default'}`}
+                            >
                               <span className="flex items-center gap-2">
-                                {v.voted && <button onClick={() => setExpandedVoter(isExpanded ? null : v.player_id)} className="text-fulda dark:text-emerald-400 text-xs">{isExpanded ? '▼' : '▶'}</button>}
-                                {v.name}
+                                {v.voted && <span className="text-gray-400 text-xs">{isExpanded ? '▼' : '▶'}</span>}
+                                <span>{v.name}</span>
                               </span>
                               <span className={v.voted ? 'text-green-600 dark:text-emerald-400 font-semibold text-xs' : 'text-gray-400 text-xs'}>{v.voted ? `✅ ${t('voted')}` : `⏳ ${t('not_voted')}`}</span>
-                            </div>
-                            {isExpanded && myVotes.length > 0 && (
-                              <div className="bg-gray-50 dark:bg-gray-800 px-6 py-2 text-xs space-y-1">
-                                {myVotes.map((mv, i) => (
+                            </button>
+                            {isExpanded && details.length > 0 && (
+                              <div className="bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs space-y-1 border-t dark:border-gray-700">
+                                {details.map((mv, i) => (
                                   <div key={i} className="flex justify-between">
                                     <span className="text-gray-500 dark:text-gray-400">{catLabel(mv.category)}</span>
                                     <span className="font-semibold">→ {mv.player_name}</span>
@@ -823,7 +856,8 @@ function SessionPage() {
         </section>
       )}
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg"
+           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="max-w-3xl mx-auto grid grid-cols-3">
           {sessionTabs.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex flex-col items-center py-2.5 transition ${activeTab === tab.key ? 'text-fulda dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
@@ -980,7 +1014,7 @@ function VotePage() {
     if (data && data.length > 0) {
       setExistingVotes(data)
       const v = { best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' }
-      data.forEach(vote => { if (Object.prototype.hasOwnProperty.call(v, vote.category)) v[vote.category] = vote.player_id })
+      data.forEach(vote => { if (v.hasOwnProperty(vote.category)) v[vote.category] = vote.player_id })
       setVotes(v)
     } else {
       setExistingVotes([])
@@ -992,7 +1026,6 @@ function VotePage() {
     const { data } = await supabase.from('votes').select('*, players(name)').eq('session_id', sessionId)
     const r = {}
     ;(data || []).forEach(v => {
-      if (!v.player_id) return
       const key = `${v.category}_${v.player_id}`
       r[key] = (r[key] || { name: v.players?.name, category: v.category, count: 0 })
       r[key].count++
@@ -1016,13 +1049,13 @@ function VotePage() {
     loadResults()
   }
 
-  async function cancelMyVote() {
+  async function cancelVote() {
     if (!selectedPlayerId) return
-    if (!confirm(t('confirm_cancel_vote'))) return
+    if (!confirm('Cancel your vote?')) return
     await supabase.from('votes').delete().eq('session_id', sessionId).eq('voter_player_id', selectedPlayerId)
     setExistingVotes([])
-    setVotes({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
     setEditing(false)
+    setVotes({ best_player: '', best_goalkeeper: '', best_defender: '', best_goal: '', pepe_award: '' })
     setAllVotedPlayerIds(prev => { const s = new Set(prev); s.delete(selectedPlayerId); return s })
     loadResults()
   }
@@ -1058,20 +1091,18 @@ function VotePage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2 gap-2">
-            <span className="text-sm font-semibold text-fulda dark:text-emerald-400 truncate">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
-            <div className="flex gap-2 shrink-0">
-              {hasVoted && (
-                <button onClick={cancelMyVote} className="text-xs bg-red-500 text-white px-2 py-1 rounded font-semibold">🗑 {t('cancel_my_vote')}</button>
-              )}
-              <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 dark:text-gray-400 underline">{t('back')}</button>
-            </div>
+          <div className="flex items-center justify-between bg-fulda/10 dark:bg-emerald-900/30 border border-fulda/30 rounded-lg px-4 py-2">
+            <span className="text-sm font-semibold text-fulda dark:text-emerald-400">👤 {players.find(p=>p.id===selectedPlayerId)?.name}</span>
+            <button onClick={() => { setSelectedPlayerId(''); setExistingVotes(null); setEditing(false) }} className="text-xs text-gray-500 dark:text-gray-400 underline">{t('back')}</button>
           </div>
 
           {hasVoted && !editing && (
             <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm text-center space-y-3">
               <p className="text-fulda dark:text-emerald-400 font-semibold">{t('thanks_voting')}</p>
-              <button onClick={() => setEditing(true)} className="text-sm border border-fulda text-fulda dark:text-emerald-400 px-4 py-2 rounded-lg font-semibold">{t('edit_vote')}</button>
+              <div className="flex gap-2 justify-center">
+                <button onClick={() => setEditing(true)} className="text-sm border border-fulda text-fulda dark:text-emerald-400 px-4 py-2 rounded-lg font-semibold">{t('edit_vote')}</button>
+                <button onClick={cancelVote} className="text-sm border border-red-500 text-red-500 px-4 py-2 rounded-lg font-semibold">🗑</button>
+              </div>
             </div>
           )}
 
@@ -1132,75 +1163,64 @@ function LeaderboardPage() {
   const [pepeAwards, setPepeAwards] = useState([])
   const [goalsBySession, setGoalsBySession] = useState([])
   const [loading, setLoading] = useState(true)
-
   useEffect(() => { load() }, [])
-
   async function load() {
     setLoading(true)
+    // Top scorers — all goals across all sessions
     const { data: g } = await supabase.from('goals').select('player_id, players!goals_player_id_fkey(name)')
     const sm = {}
     ;(g || []).forEach(x => { if (x.player_id && x.players?.name) sm[x.players.name] = (sm[x.players.name] || 0) + 1 })
     setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
 
-    const cats = ['best_player', 'best_goalkeeper', 'best_defender', 'best_goal', 'pepe_award']
+    // Session winners per category
     const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players(name)')
-    const { data: sessions } = await supabase.from('sessions').select('id, date').order('date', { ascending: true })
-
-    const winnerCount = {}
-    const sessionsWithVotes = new Set((allVotes || []).filter(v => v.player_id).map(v => v.session_id))
-    sessionsWithVotes.forEach(sid => {
-      const sessionVotes = (allVotes || []).filter(v => v.session_id === sid && v.player_id && v.players?.name)
-      cats.forEach(cat => {
-        const catVotes = sessionVotes.filter(v => v.category === cat)
-        if (catVotes.length === 0) return
-        const countMap = {}
-        catVotes.forEach(v => { countMap[v.players.name] = (countMap[v.players.name] || 0) + 1 })
-        const winner = Object.entries(countMap).sort((a,b) => b[1] - a[1])[0]
-        if (winner) {
-          if (!winnerCount[winner[0]]) winnerCount[winner[0]] = {}
-          winnerCount[winner[0]][cat] = (winnerCount[winner[0]][cat] || 0) + 1
-        }
-      })
+    // Group by session+category, find player with most votes
+    const grouped = {}
+    ;(allVotes || []).forEach(v => {
+      if (!v.player_id || !v.players?.name) return
+      const key = `${v.session_id}__${v.category}`
+      if (!grouped[key]) grouped[key] = {}
+      grouped[key][v.players.name] = (grouped[key][v.players.name] || 0) + 1
     })
+    // For each session+category, pick the top
+    const winsBy = { best_player: {}, best_goalkeeper: {}, best_defender: {}, best_goal: {}, pepe_award: {} }
+    Object.entries(grouped).forEach(([key, counts]) => {
+      const cat = key.split('__')[1]
+      if (!winsBy[cat]) return
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1])
+      if (sorted.length > 0) {
+        const winnerName = sorted[0][0]
+        winsBy[cat][winnerName] = (winsBy[cat][winnerName] || 0) + 1
+      }
+    })
+    const toList = (m) => Object.entries(m).sort((a,b) => b[1] - a[1])
+    setBestPlayers(toList(winsBy.best_player))
+    setBestKeepers(toList(winsBy.best_goalkeeper))
+    setBestDefenders(toList(winsBy.best_defender))
+    setBestGoals(toList(winsBy.best_goal))
+    setPepeAwards(toList(winsBy.pepe_award))
 
-    const buildList = (cat) => Object.entries(winnerCount)
-      .filter(([, c]) => c[cat])
-      .map(([name, c]) => [name, c[cat]])
-      .sort((a,b) => b[1] - a[1])
-    setBestPlayers(buildList('best_player'))
-    setBestKeepers(buildList('best_goalkeeper'))
-    setBestDefenders(buildList('best_defender'))
-    setBestGoals(buildList('best_goal'))
-    setPepeAwards(buildList('pepe_award'))
-
+    // Goals per session
+    const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
     const gc = {}
     ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) gc[sid] = (gc[sid] || 0) + 1 })
-    setGoalsBySession((sessions || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
+    setGoalsBySession((sessionsData || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
     setLoading(false)
   }
-
   const Section = ({ title, list }) => (
     <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
       <h3 className="font-bold mb-3">{title}</h3>
       {list.length === 0 ? <p className="text-sm text-gray-500 dark:text-gray-400">{t('no_data')}</p> :
-        <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => (
-          <li key={n} className="flex justify-between items-center">
-            <span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span>
-            <span className="font-bold text-fulda dark:text-emerald-400 bg-fulda/10 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full text-xs">{c}×</span>
-          </li>
-        ))}</ol>}
+        <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => <li key={n} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span><span className="font-bold text-fulda dark:text-emerald-400">{c}</span></li>)}</ol>}
     </div>
   )
-
   if (loading) return <p>{t('loading')}</p>
   const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280'
-  const hasData = goalsBySession.some(d => d.goals > 0)
-
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('season_lb')}</h1>
-      {hasData && (
+      {goalsBySession.length > 0 && (
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold mb-3">{t('goals_per_session')}</h3>
           <div className="h-56">
@@ -1220,11 +1240,11 @@ function LeaderboardPage() {
         </div>
       )}
       <Section title={t('top_scorers_all')} list={scorers} />
-      <Section title={t('best_player_wins')} list={bestPlayers} />
-      <Section title={t('best_keeper_wins')} list={bestKeepers} />
-      <Section title={t('best_defender_wins')} list={bestDefenders} />
-      <Section title={t('best_goal_wins')} list={bestGoals} />
-      <Section title={t('pepe_wins')} list={pepeAwards} />
+      <Section title={t('best_player_session')} list={bestPlayers} />
+      <Section title={t('best_keeper_session')} list={bestKeepers} />
+      <Section title={t('best_defender_session')} list={bestDefenders} />
+      <Section title={t('best_goal_session')} list={bestGoals} />
+      <Section title={t('pepe_session')} list={pepeAwards} />
     </div>
   )
 }
