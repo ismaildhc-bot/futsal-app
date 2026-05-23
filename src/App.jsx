@@ -400,8 +400,8 @@ function SessionPage() {
     const uniqPlayers = {}
     ;(tp || []).forEach(x => { if (x.players) uniqPlayers[x.players.id] = x.players.name })
     if (Object.keys(uniqPlayers).length === 0) return
-    const { data: votes } = await supabase.from('votes').select('voter_player_id, category, player_id, players(name)').eq('session_id', id).not('voter_player_id', 'is', null)
-    const votedIds = new Set((votes || []).map(v => v.voter_player_id))
+const { data: votes } = await supabase.from('votes').select('voter_player_id, category, player_id, players!votes_player_id_fkey(name)').eq('session_id', id).not('voter_player_id', 'is', null)
+        const votedIds = new Set((votes || []).map(v => v.voter_player_id))
     setVoteTracker(Object.entries(uniqPlayers).map(([pid, name]) => ({ player_id: pid, name, voted: votedIds.has(pid) })))
     const detail = {}
     ;(votes || []).forEach(v => {
@@ -1021,7 +1021,7 @@ function VotePage() {
   }
 
   async function loadResults() {
-    const { data } = await supabase.from('votes').select('*, players(name)').eq('session_id', sessionId)
+ const { data } = await supabase.from('votes').select('*, players!votes_player_id_fkey(name)').eq('session_id', sessionId)
     const r = {}
     ;(data || []).forEach(v => {
       const key = `${v.category}_${v.player_id}`
@@ -1171,7 +1171,7 @@ function LeaderboardPage() {
     setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
 
     // Session winners per category
-    const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players(name)')
+    const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players!votes_player_id_fkey(name)')
     // Group by session+category, find player with most votes
     const grouped = {}
     ;(allVotes || []).forEach(v => {
