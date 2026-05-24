@@ -4,13 +4,12 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, C
 import { supabase } from './supabase.js'
 
 const HS_LOGO = '/hsfulda-logo.png'
-const APP_ICON = '/icon-192.png'
 
 const translations = {
   en: {
     sessions: 'Sessions', players: 'Players', leaderboard: 'Leaderboard',
     standings: 'Standings', teams: 'Teams', matches: 'Matches',
-    new: '+ New', back: '← Back', admin: 'ADMIN', login: 'Login',
+    new: '+ New', back: '← Back', admin: 'ADMIN', login: 'Login', logout: 'Logout',
     no_sessions: 'No sessions yet.', live: 'LIVE', voting: 'VOTING',
     delete: 'Delete',
     top_scorers_session: '⭐ Top scorers (this session)',
@@ -58,7 +57,6 @@ const translations = {
     appearances: 'Appearances', edit: 'Edit',
     back_to_players: '← Back to players',
     player_not_found: 'Player not found.',
-    goals_count: 'Goals',
     start_session_matches: 'Start matches',
     pick_first_match: 'Pick the first match',
     submit_score: 'Submit score', next_match: 'Next match',
@@ -82,14 +80,15 @@ const translations = {
     not_voted: 'Not voted yet',
     anonymous_note: 'Your vote is anonymous — your name is only used to prevent double voting.',
     update_vote: 'Update vote',
-    footer_copyright: '© Hochschule Fulda — Futsal Kurs',
-    footer_contact: 'Contact: ismail.elhathout@gmx.de',
-    footer_disclaimer: 'Non-commercial internal course app. Not affiliated with HS Fulda administration.',
+    view_global: 'Global (all sessions)', view_session: 'Per session',
+    select_session: 'Select session',
+    chart_goals: 'Goals', chart_players: 'Players', chart_teams: 'Teams', chart_ratio: 'Goals/Team',
+    footer_text: 'Internal app for the Futsal course — Summer Semester 2026, Hochschule Fulda. Private use only. No personal data is collected or shared.',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
     standings: 'Tabelle', teams: 'Teams', matches: 'Spiele',
-    new: '+ Neu', back: '← Zurück', admin: 'ADMIN', login: 'Login',
+    new: '+ Neu', back: '← Zurück', admin: 'ADMIN', login: 'Login', logout: 'Abmelden',
     no_sessions: 'Noch keine Termine.', live: 'LIVE', voting: 'ABSTIMMUNG',
     delete: 'Löschen',
     top_scorers_session: '⭐ Top-Torschützen (dieser Termin)',
@@ -137,7 +136,6 @@ const translations = {
     appearances: 'Einsätze', edit: 'Bearbeiten',
     back_to_players: '← Zurück zu Spielern',
     player_not_found: 'Spieler nicht gefunden.',
-    goals_count: 'Tore',
     start_session_matches: 'Spiele starten',
     pick_first_match: 'Erstes Spiel wählen',
     submit_score: 'Endstand bestätigen', next_match: 'Nächstes Spiel',
@@ -161,9 +159,10 @@ const translations = {
     not_voted: 'Noch nicht abgestimmt',
     anonymous_note: 'Deine Stimme ist anonym — der Name wird nur zur Verhinderung doppelter Abstimmungen verwendet.',
     update_vote: 'Stimme aktualisieren',
-    footer_copyright: '© Hochschule Fulda — Futsal Kurs',
-    footer_contact: 'Kontakt: ismail.elhathout@gmx.de',
-    footer_disclaimer: 'Nicht-kommerzielle interne Kurs-App. Nicht mit der HS Fulda Verwaltung verbunden.',
+    view_global: 'Gesamt (alle Termine)', view_session: 'Pro Termin',
+    select_session: 'Termin wählen',
+    chart_goals: 'Tore', chart_players: 'Spieler', chart_teams: 'Teams', chart_ratio: 'Tore/Team',
+    footer_text: 'Interne App für den Futsal-Kurs — Sommersemester 2026, Hochschule Fulda. Nur zur privaten Nutzung. Es werden keine personenbezogenen Daten gespeichert oder weitergegeben.',
   },
 }
 
@@ -226,6 +225,11 @@ function useAuth() {
   return { user, isAdmin, loading }
 }
 
+async function adminLogout() {
+  await supabase.auth.signOut()
+  window.location.href = '/'
+}
+
 function Layout({ children }) {
   const { isAdmin } = useAuth()
   const { lang, setLang, t } = useT()
@@ -245,26 +249,22 @@ function Layout({ children }) {
         <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {inSession && (<button onClick={() => navigate('/')} className="text-white/90 hover:text-white text-sm shrink-0">{t('back')}</button>)}
-            <Link to="/" className="flex items-center gap-2 min-w-0">
-              <span className="bg-white rounded-md p-1 shrink-0 shadow-sm">
-                <img src={HS_LOGO} alt="HS Fulda" className="h-9 w-9 object-contain" />
-              </span>
-            </Link>
           </div>
-<Link to="/" className="shrink-0">
-            <img src={APP_ICON} alt="Futsal Kurs" className="h-11 w-11 object-cover rounded-lg shadow-sm" />
+          <Link to="/" className="shrink-0">
+            <span className="bg-white rounded-md p-1.5 shrink-0 shadow-sm block">
+              <img src={HS_LOGO} alt="HS Fulda" className="h-11 w-11 object-contain" />
+            </span>
           </Link>
           <div className="flex items-center gap-1.5 shrink-0 flex-1 justify-end">
             <button onClick={() => setLang(lang === 'en' ? 'de' : 'en')} className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-2 py-1 rounded">{lang === 'en' ? 'DE' : 'EN'}</button>
             <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="bg-white/15 hover:bg-white/25 text-white text-xs px-2 py-1 rounded">{theme === 'dark' ? '☀️' : '🌙'}</button>
             {isAdmin
-              ? <span className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold">{t('admin')}</span>
+              ? <button onClick={adminLogout} className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold">{t('logout')}</button>
               : <Link to="/login" className="bg-white text-fulda px-2 py-0.5 rounded text-xs font-bold">{t('login')}</Link>}
           </div>
         </div>
       </header>
 
-      {/* Watermark — tri-leaf HS Fulda logo, faint, behind content, only on home page */}
       {isHome && (
         <div className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden" aria-hidden="true">
           <img src={HS_LOGO} alt="" className="w-80 max-w-[70%] opacity-[0.05] dark:opacity-[0.07]" />
@@ -293,10 +293,8 @@ function Layout({ children }) {
 function CopyrightFooter() {
   const { t } = useT()
   return (
-    <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
-      <p className="font-semibold">{t('footer_copyright')}</p>
-      <p>{t('footer_contact')}</p>
-      <p className="italic text-[11px] max-w-md mx-auto">{t('footer_disclaimer')}</p>
+    <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
+      <p className="max-w-md mx-auto leading-relaxed">{t('footer_text')}</p>
     </footer>
   )
 }
@@ -400,8 +398,8 @@ function SessionPage() {
     const uniqPlayers = {}
     ;(tp || []).forEach(x => { if (x.players) uniqPlayers[x.players.id] = x.players.name })
     if (Object.keys(uniqPlayers).length === 0) return
-const { data: votes } = await supabase.from('votes').select('voter_player_id, category, player_id, players!votes_player_id_fkey(name)').eq('session_id', id).not('voter_player_id', 'is', null)
-        const votedIds = new Set((votes || []).map(v => v.voter_player_id))
+    const { data: votes } = await supabase.from('votes').select('voter_player_id, category, player_id, players!votes_player_id_fkey(name)').eq('session_id', id).not('voter_player_id', 'is', null)
+    const votedIds = new Set((votes || []).map(v => v.voter_player_id))
     setVoteTracker(Object.entries(uniqPlayers).map(([pid, name]) => ({ player_id: pid, name, voted: votedIds.has(pid) })))
     const detail = {}
     ;(votes || []).forEach(v => {
@@ -923,7 +921,6 @@ function PlayerProfilePage() {
   const navigate = useNavigate()
   const [player, setPlayer] = useState(null)
   const [appearances, setAppearances] = useState(0)
-  const [goalsCount, setGoalsCount] = useState(0)
   const [loading, setLoading] = useState(true)
   useEffect(() => { load() }, [id])
   async function load() {
@@ -933,8 +930,6 @@ function PlayerProfilePage() {
     const { data: tp } = await supabase.from('team_players').select('team_id, teams!inner(session_id)').eq('player_id', id)
     const sessionIds = new Set((tp || []).map(x => x.teams?.session_id).filter(Boolean))
     setAppearances(sessionIds.size)
-    const { data: g } = await supabase.from('goals').select('id').eq('player_id', id)
-    setGoalsCount((g || []).length)
     setLoading(false)
   }
   async function rename() {
@@ -963,15 +958,9 @@ function PlayerProfilePage() {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-            <div className="text-3xl font-bold text-fulda dark:text-emerald-400">{appearances}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase">{t('appearances')}</div>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-            <div className="text-3xl font-bold text-fulda dark:text-emerald-400">{goalsCount}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase">{t('goals_count')}</div>
-          </div>
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+          <div className="text-3xl font-bold text-fulda dark:text-emerald-400">{appearances}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase">{t('appearances')}</div>
         </div>
       </div>
     </div>
@@ -1021,7 +1010,7 @@ function VotePage() {
   }
 
   async function loadResults() {
- const { data } = await supabase.from('votes').select('*, players!votes_player_id_fkey(name)').eq('session_id', sessionId)
+    const { data } = await supabase.from('votes').select('*, players!votes_player_id_fkey(name)').eq('session_id', sessionId)
     const r = {}
     ;(data || []).forEach(v => {
       const key = `${v.category}_${v.player_id}`
@@ -1153,59 +1142,100 @@ function VoteSection({ title, players, value, onChange, hint }) {
 function LeaderboardPage() {
   const { t } = useT()
   const { theme } = useTheme()
-  const [scorers, setScorers] = useState([])
-  const [bestPlayers, setBestPlayers] = useState([])
-  const [bestKeepers, setBestKeepers] = useState([])
-  const [bestDefenders, setBestDefenders] = useState([])
-  const [bestGoals, setBestGoals] = useState([])
-  const [pepeAwards, setPepeAwards] = useState([])
-  const [goalsBySession, setGoalsBySession] = useState([])
+  const [bestPlayersGlobal, setBestPlayersGlobal] = useState([])
+  const [bestKeepersGlobal, setBestKeepersGlobal] = useState([])
+  const [bestDefendersGlobal, setBestDefendersGlobal] = useState([])
+  const [bestGoalsGlobal, setBestGoalsGlobal] = useState([])
+  const [pepeAwardsGlobal, setPepeAwardsGlobal] = useState([])
+  const [perSessionData, setPerSessionData] = useState({}) // {sessionId: {cat: [[name, count]]}}
+  const [sessions, setSessions] = useState([])
+  const [chartData, setChartData] = useState([])
+  const [view, setView] = useState('global') // 'global' or 'session'
+  const [selectedSession, setSelectedSession] = useState('')
   const [loading, setLoading] = useState(true)
+
   useEffect(() => { load() }, [])
+
   async function load() {
     setLoading(true)
-    // Top scorers — all goals across all sessions
-    const { data: g } = await supabase.from('goals').select('player_id, players!goals_player_id_fkey(name)')
-    const sm = {}
-    ;(g || []).forEach(x => { if (x.player_id && x.players?.name) sm[x.players.name] = (sm[x.players.name] || 0) + 1 })
-    setScorers(Object.entries(sm).sort((a,b) => b[1] - a[1]))
 
-    // Session winners per category
+    // Sessions list
+    const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
+    setSessions(sessionsData || [])
+
+    // All votes for global winners + per-session results
     const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players!votes_player_id_fkey(name)')
-    // Group by session+category, find player with most votes
-    const grouped = {}
+
+    // Group: sessionId -> category -> playerName -> count
+    const bySessionCat = {}
     ;(allVotes || []).forEach(v => {
       if (!v.player_id || !v.players?.name) return
-      const key = `${v.session_id}__${v.category}`
-      if (!grouped[key]) grouped[key] = {}
-      grouped[key][v.players.name] = (grouped[key][v.players.name] || 0) + 1
+      if (!bySessionCat[v.session_id]) bySessionCat[v.session_id] = {}
+      if (!bySessionCat[v.session_id][v.category]) bySessionCat[v.session_id][v.category] = {}
+      bySessionCat[v.session_id][v.category][v.players.name] = (bySessionCat[v.session_id][v.category][v.players.name] || 0) + 1
     })
-    // For each session+category, pick the top
+
+    // Global: count session wins
     const winsBy = { best_player: {}, best_goalkeeper: {}, best_defender: {}, best_goal: {}, pepe_award: {} }
-    Object.entries(grouped).forEach(([key, counts]) => {
-      const cat = key.split('__')[1]
-      if (!winsBy[cat]) return
-      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1])
-      if (sorted.length > 0) {
-        const winnerName = sorted[0][0]
-        winsBy[cat][winnerName] = (winsBy[cat][winnerName] || 0) + 1
-      }
+    Object.values(bySessionCat).forEach(catMap => {
+      Object.entries(catMap).forEach(([cat, counts]) => {
+        if (!winsBy[cat]) return
+        const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1])
+        if (sorted.length > 0) winsBy[cat][sorted[0][0]] = (winsBy[cat][sorted[0][0]] || 0) + 1
+      })
     })
     const toList = (m) => Object.entries(m).sort((a,b) => b[1] - a[1])
-    setBestPlayers(toList(winsBy.best_player))
-    setBestKeepers(toList(winsBy.best_goalkeeper))
-    setBestDefenders(toList(winsBy.best_defender))
-    setBestGoals(toList(winsBy.best_goal))
-    setPepeAwards(toList(winsBy.pepe_award))
+    setBestPlayersGlobal(toList(winsBy.best_player))
+    setBestKeepersGlobal(toList(winsBy.best_goalkeeper))
+    setBestDefendersGlobal(toList(winsBy.best_defender))
+    setBestGoalsGlobal(toList(winsBy.best_goal))
+    setPepeAwardsGlobal(toList(winsBy.pepe_award))
 
-    // Goals per session
-    const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
+    // Per session: full ranked list per category
+    const perSession = {}
+    Object.entries(bySessionCat).forEach(([sid, catMap]) => {
+      perSession[sid] = {}
+      ;['best_player','best_goalkeeper','best_defender','best_goal','pepe_award'].forEach(cat => {
+        perSession[sid][cat] = catMap[cat] ? Object.entries(catMap[cat]).sort((a,b) => b[1] - a[1]) : []
+      })
+    })
+    setPerSessionData(perSession)
+
+    // Chart data: goals + teams + players per session
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
-    const gc = {}
-    ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) gc[sid] = (gc[sid] || 0) + 1 })
-    setGoalsBySession((sessionsData || []).map(s => ({ label: s.date, goals: gc[s.id] || 0 })))
+    const goalsCount = {}
+    ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) goalsCount[sid] = (goalsCount[sid] || 0) + 1 })
+
+    const { data: allTeams } = await supabase.from('teams').select('id, session_id')
+    const teamsCount = {}
+    ;(allTeams || []).forEach(x => { teamsCount[x.session_id] = (teamsCount[x.session_id] || 0) + 1 })
+
+    const { data: allTeamPlayers } = await supabase.from('team_players').select('player_id, teams!inner(session_id)')
+    const playersBySession = {}
+    ;(allTeamPlayers || []).forEach(x => {
+      const sid = x.teams?.session_id
+      if (!sid) return
+      if (!playersBySession[sid]) playersBySession[sid] = new Set()
+      playersBySession[sid].add(x.player_id)
+    })
+
+    const chart = (sessionsData || []).map(s => {
+      const g = goalsCount[s.id] || 0
+      const tm = teamsCount[s.id] || 0
+      const pl = playersBySession[s.id] ? playersBySession[s.id].size : 0
+      return {
+        label: s.date,
+        goals: g,
+        teams: tm,
+        players: pl,
+        ratio: tm > 0 ? Math.round((g / tm) * 10) / 10 : 0,
+      }
+    })
+    setChartData(chart)
+
     setLoading(false)
   }
+
   const Section = ({ title, list }) => (
     <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
       <h3 className="font-bold mb-3">{title}</h3>
@@ -1213,21 +1243,42 @@ function LeaderboardPage() {
         <ol className="space-y-1.5 text-sm">{list.slice(0,10).map(([n,c], i) => <li key={n} className="flex justify-between"><span><span className="text-gray-400 w-5 inline-block">{i+1}.</span> {n}</span><span className="font-bold text-fulda dark:text-emerald-400">{c}</span></li>)}</ol>}
     </div>
   )
+
   if (loading) return <p>{t('loading')}</p>
   const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280'
+
+  // Custom tooltip showing all stats
+  const ChartTooltip = ({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null
+    const d = payload[0].payload
+    return (
+      <div className="bg-white dark:bg-gray-900 border border-fulda rounded-lg p-2 text-xs shadow-lg">
+        <div className="font-bold mb-1">{d.label}</div>
+        <div className="flex justify-between gap-3"><span>{t('chart_goals')}:</span><span className="font-bold">{d.goals}</span></div>
+        <div className="flex justify-between gap-3"><span>{t('chart_teams')}:</span><span className="font-bold">{d.teams}</span></div>
+        <div className="flex justify-between gap-3"><span>{t('chart_players')}:</span><span className="font-bold">{d.players}</span></div>
+        <div className="flex justify-between gap-3 border-t border-gray-200 dark:border-gray-700 mt-1 pt-1"><span>{t('chart_ratio')}:</span><span className="font-bold text-fulda dark:text-emerald-400">{d.ratio}</span></div>
+      </div>
+    )
+  }
+
+  const sessionWinners = selectedSession && perSessionData[selectedSession] ? perSessionData[selectedSession] : null
+  const selectedSessionLabel = sessions.find(s => s.id === selectedSession)?.date || ''
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t('season_lb')}</h1>
-      {goalsBySession.length > 0 && (
+
+      {chartData.length > 0 && (
         <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
           <h3 className="font-bold mb-3">{t('goals_per_session')}</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={goalsBySession} margin={{ top: 20, right: 10, left: -10, bottom: 0 }} barCategoryGap="35%">
+              <ComposedChart data={chartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }} barCategoryGap="35%">
                 <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#e5e7eb'} />
                 <XAxis dataKey="label" stroke={axisColor} tick={{ fontSize: 10 }} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: theme === 'dark' ? '#111827' : '#fff', border: '1px solid #00A859', borderRadius: 8 }} />
+                <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="goals" fill="#00A859" radius={[4,4,0,0]} maxBarSize={50}>
                   <LabelList dataKey="goals" position="top" fill={axisColor} fontSize={11} fontWeight="bold" />
                 </Bar>
@@ -1237,12 +1288,44 @@ function LeaderboardPage() {
           </div>
         </div>
       )}
-      <Section title={t('top_scorers_all')} list={scorers} />
-      <Section title={t('best_player_session')} list={bestPlayers} />
-      <Section title={t('best_keeper_session')} list={bestKeepers} />
-      <Section title={t('best_defender_session')} list={bestDefenders} />
-      <Section title={t('best_goal_session')} list={bestGoals} />
-      <Section title={t('pepe_session')} list={pepeAwards} />
+
+      {/* Toggle: global vs per session */}
+      <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+        <button onClick={() => setView('global')} className={`py-2 rounded-md text-sm font-semibold transition ${view==='global' ? 'bg-white dark:bg-gray-900 text-fulda dark:text-emerald-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>{t('view_global')}</button>
+        <button onClick={() => setView('session')} className={`py-2 rounded-md text-sm font-semibold transition ${view==='session' ? 'bg-white dark:bg-gray-900 text-fulda dark:text-emerald-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>{t('view_session')}</button>
+      </div>
+
+      {view === 'global' && (
+        <>
+          <Section title={t('best_player_session')} list={bestPlayersGlobal} />
+          <Section title={t('best_keeper_session')} list={bestKeepersGlobal} />
+          <Section title={t('best_defender_session')} list={bestDefendersGlobal} />
+          <Section title={t('best_goal_session')} list={bestGoalsGlobal} />
+          <Section title={t('pepe_session')} list={pepeAwardsGlobal} />
+        </>
+      )}
+
+      {view === 'session' && (
+        <>
+          <div className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
+            <label className="text-sm font-semibold block mb-2">{t('select_session')}</label>
+            <select value={selectedSession} onChange={e => setSelectedSession(e.target.value)} className="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm">
+              <option value="">—</option>
+              {sessions.slice().reverse().map(s => <option key={s.id} value={s.id}>{s.date}{s.name && s.name !== `Session ${s.date}` ? ` · ${s.name}` : ''}</option>)}
+            </select>
+          </div>
+
+          {selectedSession && sessionWinners && (
+            <>
+              <Section title={`${t('best_player')} — ${selectedSessionLabel}`} list={sessionWinners.best_player} />
+              <Section title={`${t('best_keeper')} — ${selectedSessionLabel}`} list={sessionWinners.best_goalkeeper} />
+              <Section title={`${t('best_defender')} — ${selectedSessionLabel}`} list={sessionWinners.best_defender} />
+              <Section title={`${t('best_goal')} — ${selectedSessionLabel}`} list={sessionWinners.best_goal} />
+              <Section title={`${t('pepe_award')} — ${selectedSessionLabel}`} list={sessionWinners.pepe_award} />
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }
