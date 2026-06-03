@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react'
+import React, { useState, useEffect, createContext, useContext, useRef } from 'react'
 import { Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts'
 import { supabase } from './supabase.js'
@@ -84,6 +84,21 @@ const translations = {
     select_session: 'Select session',
     chart_goals: 'Goals', chart_players: 'Players', chart_teams: 'Teams', chart_ratio: 'Goals/Team',
     footer_text: 'Internal app for the Futsal course — Summer Semester 2026, Hochschule Fulda. Private use only. No personal data is collected or shared.',
+    match_timer: 'Match Timer',
+    timer_duration: 'Duration',
+    timer_start: 'Start',
+    timer_pause: 'Pause',
+    timer_resume: 'Resume',
+    timer_reset: 'Reset',
+    timer_change_alert: 'PLAYER CHANGE',
+    timer_end_alert: 'MATCH ENDED',
+    timer_min: 'min',
+    timer_running: 'Running',
+    timer_paused: 'Paused',
+    timer_ended: 'Ended',
+    timer_ready: 'Ready',
+    timer_hint: 'Runs on this device only. Alerts every 2 min for player change. Keep screen on for sound/vibration.',
+    timer_dismiss: 'Tap to dismiss',
   },
   de: {
     sessions: 'Termine', players: 'Spieler', leaderboard: 'Bestenliste',
@@ -163,6 +178,21 @@ const translations = {
     select_session: 'Termin wählen',
     chart_goals: 'Tore', chart_players: 'Spieler', chart_teams: 'Teams', chart_ratio: 'Tore/Team',
     footer_text: 'Interne App für den Futsal-Kurs — Sommersemester 2026, Hochschule Fulda. Nur zur privaten Nutzung. Es werden keine personenbezogenen Daten gespeichert oder weitergegeben.',
+    match_timer: 'Spielzeit-Timer',
+    timer_duration: 'Dauer',
+    timer_start: 'Start',
+    timer_pause: 'Pause',
+    timer_resume: 'Weiter',
+    timer_reset: 'Zurücksetzen',
+    timer_change_alert: 'WECHSEL',
+    timer_end_alert: 'SPIEL ENDE',
+    timer_min: 'Min',
+    timer_running: 'Läuft',
+    timer_paused: 'Pause',
+    timer_ended: 'Beendet',
+    timer_ready: 'Bereit',
+    timer_hint: 'Läuft nur auf diesem Gerät. Alle 2 Min Wechsel-Hinweis. Bildschirm an lassen für Ton/Vibration.',
+    timer_dismiss: 'Tippen zum Schließen',
   },
 }
 
@@ -350,6 +380,191 @@ function HomePage() {
       </div>
       <CopyrightFooter />
     </div>
+  )
+}
+
+function MatchTimer() {
+  const { t } = useT()
+  const [duration, setDuration] = useState(() => parseInt(localStorage.getItem('mt_duration') || '360'))
+  const [startTime, setStartTime] = useState(() => {
+    const s = localStorage.getItem('mt_startTime')
+    return s ? parseInt(s) : null
+  })
+  const [pausedAt, setPausedAt] = useState(() => {
+    const p = localStorage.getItem('mt_pausedAt')
+    return p ? parseInt(p) : null
+  })
+  const [pausedTotal, setPausedTotal] = useState(() => parseInt(localStorage.getItem('mt_pausedTotal') || '0'))
+  const [firedAlerts, setFiredAlerts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mt_firedAlerts') || '[]') } catch { return [] }
+  })
+  const [now, setNow] = useState(Date.now())
+  const [banner, setBanner] = useState(null)
+  const audioCtxRef = useRef(null)
+
+  useEffect(() => { localStorage.setItem('mt_duration', String(duration)) }, [duration])
+  useEffect(() => {
+    if (startTime) localStorage.setItem('mt_startTime', String(startTime))
+    else localStorage.removeItem('mt_startTime')
+  }, [startTime])
+  useEffect(() => {
+    if (pausedAt) localStorage.setItem('mt_pausedAt', String(pausedAt))
+    else localStorage.removeItem('mt_pausedAt')
+  }, [pausedAt])
+  useEffect(() => { localStorage.setItem('mt_pausedTotal', String(pausedTotal)) }, [pausedTotal])
+  useEffect(() => { localStorage.setItem('mt_firedAlerts', JSON.stringify(firedAlerts)) }, [firedAlerts])
+
+  useEffect(() => {
+    if (!startTime || pausedAt) return
+    const interval = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(interval)
+  }, [startTime, pausedAt])
+
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') setNow(Date.now())
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+
+  const isRunning = !!startTime && !pausedAt
+  const isPaused = !!startTime && !!pausedAt
+  const elapsed = startTime ? Math.max(0, ((pausedAt || now) - startTime - pausedTotal) / 1000) : 0
+  const remaining = Math.max(0, duration - elapsed)
+  const isEnded = !!startTime && elapsed >= duration
+
+  useEffect(() => {
+    if (!isRunning) return
+    const points = []
+    for (let mark = 120; mark < duration; mark += 120) points.push({ at: mark, type: 'change', key: `change_${mark}` })
+    points.push({ at: duration, type: 'end', key: 'end' })
+    const newFired = []
+    for (const p of points) {
+      if (elapsed >= p.at && !firedAlerts.includes(p.key)) {
+        fireAlert(p.type)
+        newFired.push(p.key)
+      }
+    }
+    if (newFired.length > 0) setFiredAlerts(prev => [...prev, ...newFired])
+  }, [elapsed, isRunning, duration])
+
+  function fireAlert(type) {
+    if (navigator.vibrate) {
+      navigator.vibrate(type === 'end' ? [400, 100, 400, 100, 400] : [200, 100, 200])
+    }
+    playBeep(type === 'end' ? 3 : 2)
+    setBanner(type)
+    setTimeout(() => setBanner(null), 4000)
+  }
+
+  function playBeep(count) {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
+      const ctx = audioCtxRef.current
+      if (ctx.state === 'suspended') ctx.resume()
+      for (let i = 0; i < count; i++) {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain); gain.connect(ctx.destination)
+        osc.frequency.value = (count === 3 && i === count - 1) ? 600 : 880
+        const startAt = ctx.currentTime + i * 0.25
+        osc.start(startAt)
+        gain.gain.setValueAtTime(0, startAt)
+        gain.gain.linearRampToValueAtTime(0.5, startAt + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.001, startAt + 0.2)
+        osc.stop(startAt + 0.22)
+      }
+    } catch (e) {}
+  }
+
+  function start() {
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
+      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
+    } catch (e) {}
+    setStartTime(Date.now())
+    setPausedAt(null)
+    setPausedTotal(0)
+    setFiredAlerts([])
+    setBanner(null)
+    setNow(Date.now())
+  }
+  function pause() { if (isRunning) setPausedAt(Date.now()) }
+  function resume() {
+    if (!isPaused) return
+    setPausedTotal(prev => prev + (Date.now() - pausedAt))
+    setPausedAt(null)
+  }
+  function reset() {
+    setStartTime(null); setPausedAt(null); setPausedTotal(0); setFiredAlerts([]); setBanner(null)
+  }
+
+  const mins = Math.floor(remaining / 60)
+  const secs = Math.floor(remaining % 60)
+  const timeStr = `${mins}:${String(secs).padStart(2, '0')}`
+  const presets = [4, 5, 6, 8, 10]
+
+  return (
+    <section className="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-4 shadow-sm">
+      <h2 className="font-bold mb-3">⏱ {t('match_timer')}</h2>
+
+      <div className={`text-center py-5 rounded-lg font-bold tabular-nums transition-colors ${
+        isEnded ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' :
+        isRunning ? 'bg-fulda/10 dark:bg-emerald-900/30 text-fulda dark:text-emerald-400' :
+        isPaused ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+        'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+      }`}>
+        <div className="text-6xl">{timeStr}</div>
+        <div className="text-xs mt-2 uppercase tracking-wide font-semibold">
+          {isEnded ? t('timer_ended') : isRunning ? t('timer_running') : isPaused ? t('timer_paused') : t('timer_ready')}
+        </div>
+      </div>
+
+      {!startTime && (
+        <div className="mt-3">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{t('timer_duration')}</div>
+          <div className="grid grid-cols-5 gap-1.5">
+            {presets.map(min => (
+              <button key={min} onClick={() => setDuration(min * 60)}
+                className={`py-2 rounded-lg text-sm font-bold transition ${
+                  duration === min * 60 ? 'bg-fulda text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                }`}>{min} {t('timer_min')}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {!startTime && (
+          <button onClick={start} className="col-span-2 bg-fulda text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">▶ {t('timer_start')}</button>
+        )}
+        {isRunning && (<>
+          <button onClick={pause} className="bg-yellow-500 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">⏸ {t('timer_pause')}</button>
+          <button onClick={reset} className="bg-gray-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">↺ {t('timer_reset')}</button>
+        </>)}
+        {isPaused && (<>
+          <button onClick={resume} className="bg-fulda text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">▶ {t('timer_resume')}</button>
+          <button onClick={reset} className="bg-gray-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">↺ {t('timer_reset')}</button>
+        </>)}
+        {isEnded && !isPaused && (
+          <button onClick={reset} className="col-span-2 bg-gray-700 text-white py-3 rounded-lg font-bold shadow-sm active:scale-95 transition">↺ {t('timer_reset')}</button>
+        )}
+      </div>
+
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 leading-relaxed">{t('timer_hint')}</p>
+
+      {banner && (
+        <div onClick={() => setBanner(null)}
+          className={`fixed inset-0 z-[100] flex items-center justify-center cursor-pointer ${banner === 'end' ? 'bg-red-600' : 'bg-fulda'}`}>
+          <div className="text-center text-white px-6 animate-pulse">
+            <div className="text-8xl mb-4">{banner === 'end' ? '🏁' : '🔄'}</div>
+            <div className="text-4xl font-black tracking-wide">{banner === 'end' ? t('timer_end_alert') : t('timer_change_alert')}</div>
+            <div className="text-sm mt-6 opacity-70">{t('timer_dismiss')}</div>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -852,6 +1067,8 @@ function SessionPage() {
         </section>
       )}
 
+      {activeTab === 'matches' && <MatchTimer />}
+
       <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg"
            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="max-w-3xl mx-auto grid grid-cols-3">
@@ -1147,10 +1364,10 @@ function LeaderboardPage() {
   const [bestDefendersGlobal, setBestDefendersGlobal] = useState([])
   const [bestGoalsGlobal, setBestGoalsGlobal] = useState([])
   const [pepeAwardsGlobal, setPepeAwardsGlobal] = useState([])
-  const [perSessionData, setPerSessionData] = useState({}) // {sessionId: {cat: [[name, count]]}}
+  const [perSessionData, setPerSessionData] = useState({})
   const [sessions, setSessions] = useState([])
   const [chartData, setChartData] = useState([])
-  const [view, setView] = useState('global') // 'global' or 'session'
+  const [view, setView] = useState('global')
   const [selectedSession, setSelectedSession] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -1159,14 +1376,11 @@ function LeaderboardPage() {
   async function load() {
     setLoading(true)
 
-    // Sessions list
     const { data: sessionsData } = await supabase.from('sessions').select('id, date, name').order('date', { ascending: true })
     setSessions(sessionsData || [])
 
-    // All votes for global winners + per-session results
     const { data: allVotes } = await supabase.from('votes').select('session_id, category, player_id, players!votes_player_id_fkey(name)')
 
-    // Group: sessionId -> category -> playerName -> count
     const bySessionCat = {}
     ;(allVotes || []).forEach(v => {
       if (!v.player_id || !v.players?.name) return
@@ -1175,7 +1389,6 @@ function LeaderboardPage() {
       bySessionCat[v.session_id][v.category][v.players.name] = (bySessionCat[v.session_id][v.category][v.players.name] || 0) + 1
     })
 
-    // Global: count session wins
     const winsBy = { best_player: {}, best_goalkeeper: {}, best_defender: {}, best_goal: {}, pepe_award: {} }
     Object.values(bySessionCat).forEach(catMap => {
       Object.entries(catMap).forEach(([cat, counts]) => {
@@ -1191,7 +1404,6 @@ function LeaderboardPage() {
     setBestGoalsGlobal(toList(winsBy.best_goal))
     setPepeAwardsGlobal(toList(winsBy.pepe_award))
 
-    // Per session: full ranked list per category
     const perSession = {}
     Object.entries(bySessionCat).forEach(([sid, catMap]) => {
       perSession[sid] = {}
@@ -1201,7 +1413,6 @@ function LeaderboardPage() {
     })
     setPerSessionData(perSession)
 
-    // Chart data: goals + teams + players per session
     const { data: allGoals } = await supabase.from('goals').select('match_id, matches!inner(session_id)')
     const goalsCount = {}
     ;(allGoals || []).forEach(x => { const sid = x.matches?.session_id; if (sid) goalsCount[sid] = (goalsCount[sid] || 0) + 1 })
@@ -1247,7 +1458,6 @@ function LeaderboardPage() {
   if (loading) return <p>{t('loading')}</p>
   const axisColor = theme === 'dark' ? '#9ca3af' : '#6b7280'
 
-  // Custom tooltip showing all stats
   const ChartTooltip = ({ active, payload }) => {
     if (!active || !payload || !payload.length) return null
     const d = payload[0].payload
@@ -1289,7 +1499,6 @@ function LeaderboardPage() {
         </div>
       )}
 
-      {/* Toggle: global vs per session */}
       <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
         <button onClick={() => setView('global')} className={`py-2 rounded-md text-sm font-semibold transition ${view==='global' ? 'bg-white dark:bg-gray-900 text-fulda dark:text-emerald-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>{t('view_global')}</button>
         <button onClick={() => setView('session')} className={`py-2 rounded-md text-sm font-semibold transition ${view==='session' ? 'bg-white dark:bg-gray-900 text-fulda dark:text-emerald-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>{t('view_session')}</button>
